@@ -16,8 +16,8 @@ spring:
       socket-timeout: 30s
   r2dbc:
     url: r2dbc:postgresql://localhost:5432/iot_registry
-    username: ihor
-    password: qwerty
+    username: username
+    password: pass
     pool:
       initial-size: 5
       max-size: 20
