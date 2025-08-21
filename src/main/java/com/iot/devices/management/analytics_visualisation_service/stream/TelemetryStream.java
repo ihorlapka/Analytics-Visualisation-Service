@@ -22,7 +22,7 @@ public class TelemetryStream {
     private final Map<Class<? extends TelemetryEvent>, Sinks.Many<TelemetryEvent>> sinkByClass = new ConcurrentHashMap<>();
 
     public Mono<Void> publish(SpecificRecord record) {
-        return Mono.fromRunnable(() -> sinkByClass.compute(mapClass(record), (k, v) -> {
+        return Mono.just(sinkByClass.compute(mapClass(record), (k, v) -> {
             if (v == null) {
                 v = Sinks.many().replay().limit(100);
             }

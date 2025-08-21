@@ -51,14 +51,14 @@ public class ReactiveKafkaConsumerRunner {
                 .limitRate(consumerProperties.getPollLimitRate())
                 .flatMap(record -> telemetryStream.publish(record.value())
                         .doOnSuccess(ignored -> record.receiverOffset().acknowledge())
-                        .onErrorResume(error -> logAndSkipNonRetriableErrors(record, error)))
+                        .onErrorResume(error -> logAndSkipIfNonRetriableError(record, error)))
                 .doOnError(error -> log.error("Consumer error: {}", error.getMessage()))
                 .retryWhen(Retry.backoff(MAX_VALUE, ofSeconds(consumerProperties.getBackoffTimeSeconds()))
                         .maxBackoff(ofSeconds(consumerProperties.getMaxBackoffTimeSeconds())))
                 .subscribe();
     }
 
-    private Mono<Void> logAndSkipNonRetriableErrors(ReceiverRecord<String, SpecificRecord> record, Throwable error) {
+    private Mono<Void> logAndSkipIfNonRetriableError(ReceiverRecord<String, SpecificRecord> record, Throwable error) {
         if (isNonRetriable(error)) {
             log.error("Non-retriable error, skipping message: {}", error.getMessage());
             record.receiverOffset().acknowledge();
