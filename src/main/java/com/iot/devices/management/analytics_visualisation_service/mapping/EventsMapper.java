@@ -1,0 +1,122 @@
+package com.iot.devices.management.analytics_visualisation_service.mapping;
+
+import com.iot.devices.*;
+import com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceStatus;
+import com.iot.devices.management.analytics_visualisation_service.persistence.enums.DoorState;
+import com.iot.devices.management.analytics_visualisation_service.persistence.enums.ThermostatMode;
+import com.iot.devices.management.analytics_visualisation_service.persistence.mongo.model.*;
+import lombok.experimental.UtilityClass;
+
+import java.util.UUID;
+
+import static java.util.Optional.ofNullable;
+
+@UtilityClass
+public class EventsMapper {
+
+    public static DoorSensorEvent mapDoorSensor(DoorSensor ds) {
+        return new DoorSensorEvent(
+                UUID.fromString(ds.getDeviceId()),
+                ofNullable(ds.getDoorState())
+                        .map(s -> DoorState.valueOf(s.name()))
+                        .orElse(null),
+                ds.getBatteryLevel(),
+                ds.getTamperAlert(),
+                ofNullable(ds.getStatus())
+                        .map(s -> DeviceStatus.valueOf(s.name()))
+                        .orElse(null),
+                ds.getLastOpened(),
+                ds.getFirmwareVersion(),
+                ds.getLastUpdated());
+    }
+
+    public static ThermostatEvent mapThermostat(Thermostat t) {
+        return new ThermostatEvent(
+                UUID.fromString(t.getDeviceId()),
+                t.getCurrentTemperature(),
+                t.getTargetTemperature(),
+                t.getHumidity(),
+                ofNullable(t.getMode())
+                        .map(mode -> ThermostatMode.valueOf(mode.name()))
+                        .orElse(null),
+                ofNullable(t.getStatus())
+                        .map(s -> DeviceStatus.valueOf(s.name()))
+                        .orElse(null),
+                t.getFirmwareVersion(),
+                t.getLastUpdated());
+    }
+
+    public static SmartLightEvent mapSmartLight(SmartLight sl) {
+        return new SmartLightEvent(
+                UUID.fromString(sl.getDeviceId()),
+                sl.getIsOn(),
+                sl.getBrightness(),
+                sl.getColor(),
+                ofNullable(sl.getMode())
+                        .map(Enum::name)
+                        .orElse(null),
+                sl.getPowerConsumption(),
+                ofNullable(sl.getStatus())
+                        .map(s -> DeviceStatus.valueOf(s.name()))
+                        .orElse(null),
+                sl.getFirmwareVersion(),
+                sl.getLastUpdated());
+    }
+
+    public static EnergyMeterEvent mapEnergyMeter(EnergyMeter em) {
+        return new EnergyMeterEvent(
+                UUID.fromString(em.getDeviceId()),
+                em.getVoltage(),
+                em.getCurrent(),
+                em.getPower(),
+                em.getEnergyConsumed(),
+                ofNullable(em.getStatus())
+                        .map(s -> DeviceStatus.valueOf(s.name()))
+                        .orElse(null),
+                em.getFirmwareVersion(),
+                em.getLastUpdated());
+    }
+
+    public static SmartPlugEvent mapSmartPlug(SmartPlug em) {
+        return new SmartPlugEvent(
+                UUID.fromString(em.getDeviceId()),
+                em.getIsOn(),
+                em.getVoltage(),
+                em.getCurrent(),
+                em.getPowerUsage(),
+                ofNullable(em.getStatus())
+                        .map(s -> DeviceStatus.valueOf(s.name()))
+                        .orElse(null),
+                em.getFirmwareVersion(),
+                em.getLastUpdated());
+    }
+
+    public static TemperatureSensorEvent mapTemperatureSensor(TemperatureSensor ts) {
+        return new TemperatureSensorEvent(
+                UUID.fromString(ts.getDeviceId()),
+                ts.getTemperature(),
+                ts.getHumidity(),
+                ts.getPressure(),
+                ofNullable(ts.getUnit())
+                        .map(Enum::name)
+                        .orElse(null),
+                ofNullable(ts.getStatus())
+                        .map(s -> DeviceStatus.valueOf(s.name()))
+                        .orElse(null),
+                ts.getFirmwareVersion(),
+                ts.getLastUpdated());
+    }
+
+    public static SoilMoistureSensorEvent mapSoilMoistureSensor(SoilMoistureSensor sms) {
+        return new SoilMoistureSensorEvent(
+                UUID.fromString(sms.getDeviceId()),
+                sms.getMoisturePercentage(),
+                sms.getSoilTemperature(),
+                sms.getBatteryLevel(),
+                ofNullable(sms.getStatus())
+                        .map(s -> DeviceStatus.valueOf(s.name()))
+                        .orElse(null),
+                sms.getFirmwareVersion(),
+                sms.getLastUpdated());
+    }
+}

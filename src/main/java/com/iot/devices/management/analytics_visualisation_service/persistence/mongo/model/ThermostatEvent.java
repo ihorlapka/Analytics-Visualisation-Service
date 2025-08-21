@@ -4,7 +4,6 @@ import com.iot.devices.management.analytics_visualisation_service.persistence.en
 import com.iot.devices.management.analytics_visualisation_service.persistence.enums.ThermostatMode;
 import lombok.*;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.format.annotation.DateTimeFormat;
 
@@ -37,7 +36,4 @@ public class ThermostatEvent implements TelemetryEvent {
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private Instant lastUpdated;
-
-    @Transient
-    private Long offset;
 }
