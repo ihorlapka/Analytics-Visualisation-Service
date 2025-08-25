@@ -11,11 +11,11 @@ spring:
         max-page-size: 100
     mongodb:
       uuid-representation: standard
-      uri: mongodb://localhost:27017/telemetry-events
+      uri: test-mongodb-uri
       connect-timeout: 10s
       socket-timeout: 30s
   r2dbc:
-    url: r2dbc:postgresql://localhost:5432/iot_registry
+    url: test-r2dbc-url
     username: username
     password: pass
     pool:
@@ -38,14 +38,14 @@ kafka:
   consumer:
     topic: iot-devices-data
     poll-limit-rate: 500
-    backoff-time-seconds: 5
+    backoff-time-seconds: 2
     max-backoff-time-seconds: 60
     properties:
       bootstrap.servers: localhost:9092
       group.id: alerts
       key.deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value.deserializer: io.confluent.kafka.serializers.KafkaAvroDeserializer
-      schema.registry.url: http://localhost:8081
+      schema.registry.url: mock://my-scope:8081
       specific.avro.reader: true
       auto.offset.reset: earliest
       enable.auto.commit: false
@@ -54,3 +54,10 @@ kafka:
       fetch.min.bytes: 128
       fetch.max.wait.ms: 5000
       value.subject.name.strategy: io.confluent.kafka.serializers.subject.TopicRecordNameStrategy
+  producer:
+    topic: iot-devices-data
+    properties:
+      bootstrap.servers: localhost:9092
+      key.serializer: org.apache.kafka.common.serialization.StringSerializer
+      value.serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
+      schema.registry.url: mock://my-scope:8081

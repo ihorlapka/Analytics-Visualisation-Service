@@ -10,6 +10,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.publisher.Sinks;
 
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static com.iot.devices.management.analytics_visualisation_service.mapping.EventsMapper.*;
@@ -19,22 +20,33 @@ import static java.util.Optional.ofNullable;
 @RequiredArgsConstructor
 public class TelemetryStream {
 
+    public static final int HISTORY_SIZE = 100;
+
     private final Map<Class<? extends TelemetryEvent>, Sinks.Many<TelemetryEvent>> sinkByClass = new ConcurrentHashMap<>();
 
     public Mono<Void> publish(SpecificRecord record) {
         return Mono.just(sinkByClass.compute(mapClass(record), (k, v) -> {
             if (v == null) {
-                v = Sinks.many().replay().limit(100);
+                v = Sinks.many().replay().limit(HISTORY_SIZE);
             }
             v.tryEmitNext(map(record));
             return v;
         })).then();
     }
 
-    public <T extends TelemetryEvent> Flux<? extends TelemetryEvent> getStream(Class<T> clazz) {
+    @SuppressWarnings("unchecked")
+    public <T extends TelemetryEvent> Flux<T> getStream(Class<T> clazz, UUID deviceId) {
         return ofNullable(sinkByClass.get(clazz))
-                .map(Sinks.Many::asFlux)
+                .map(eventMany -> eventMany
+                        .asFlux()
+                        .filter(event -> event.getDeviceId().equals(deviceId))
+                        .map(event -> (T) event)
+                )
                 .orElse(Flux.empty());
+    }
+
+    public void purge() {
+        sinkByClass.clear();
     }
 
     private Class<? extends TelemetryEvent> mapClass(SpecificRecord record) {

@@ -11,6 +11,6 @@ import java.util.UUID;
 public interface SmartPlugRepository extends ReactiveMongoRepository<SmartPlugEvent, UUID> {
 
     Mono<SmartPlugEvent> findByDeviceIdAndLastUpdated(UUID deviceId, Instant lastUpdated);
-    Flux<SmartPlugEvent> findByIdAndLastUpdatedBetween(UUID deviceId, Instant start, Instant end);
+    Flux<SmartPlugEvent> findByDeviceIdAndLastUpdatedBetween(UUID deviceId, Instant start, Instant end);
 
 }

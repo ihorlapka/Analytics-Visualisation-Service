@@ -39,15 +39,15 @@ public class DevicesController {
                 .takeLast(5);
     }
 
-    @GetMapping("/devices/{deviceId}")
-    public Flux<SmartPlugEvent> getHistoricalData(@PathVariable UUID deviceId, @RequestParam Instant from, @RequestParam Instant to) {
-        return smartPlugRepository.findByIdAndLastUpdatedBetween(deviceId, from, to);
-    }
+//    @GetMapping("/devices/{deviceId}")
+//    public Flux<SmartPlugEvent> getHistoricalData(@PathVariable UUID deviceId, @RequestParam Instant from, @RequestParam Instant to) {
+//        return smartPlugRepository.findByDeviceIdAndLastUpdatedBetween(deviceId, from, to);
+//    }
 
     @GetMapping(value = "/devices/{deviceId}", produces = TEXT_EVENT_STREAM_VALUE)
     public Flux<? extends TelemetryEvent> getHistoricalAndRealTimeData(@PathVariable UUID deviceId, @RequestParam Instant from) {
-       return Flux.merge(smartPlugRepository.findByIdAndLastUpdatedBetween(deviceId, from, now()),
-                       (telemetryStream.getStream(SmartPlugEvent.class)))
+       return Flux.merge(smartPlugRepository.findByDeviceIdAndLastUpdatedBetween(deviceId, from, now()),
+                       (telemetryStream.getStream(SmartPlugEvent.class, deviceId)))
                .distinct();
     }
 }
