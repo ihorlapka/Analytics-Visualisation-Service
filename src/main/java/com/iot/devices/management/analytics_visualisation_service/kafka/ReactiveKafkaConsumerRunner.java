@@ -62,16 +62,18 @@ public class ReactiveKafkaConsumerRunner {
         subscription = consumerTemplate.receive()
                 .limitRate(consumerProperties.getPollLimitRate())
                 .flatMap(record -> telemetryStream.publish(record.value())
-                        .doOnSuccess(ignored -> {
-                            ReceiverOffset offset = record.receiverOffset();
-                            log.info("Received message: {}, offset: {}", record.value(), offset.offset());
-                            offset.acknowledge();
-                        })
+                        .doOnSuccess(ignored -> logAndAcknowledge(record))
                         .onErrorResume(error -> logAndAcknowledgeIfNonRetriableError(record, error)))
                 .doOnError(error -> log.error("Consumer error: {}", error.getMessage()))
                 .retryWhen(Retry.backoff(MAX_VALUE, ofSeconds(consumerProperties.getBackoffTimeSeconds()))
                         .maxBackoff(ofSeconds(consumerProperties.getMaxBackoffTimeSeconds())))
                 .subscribe();
+    }
+
+    private void logAndAcknowledge(ReceiverRecord<String, SpecificRecord> record) {
+        final ReceiverOffset offset = record.receiverOffset();
+        log.info("Received message: {}, offset: {}", record.value(), offset.offset());
+        offset.acknowledge();
     }
 
     private Mono<Void> logAndAcknowledgeIfNonRetriableError(ReceiverRecord<String, SpecificRecord> record, Throwable error) {
