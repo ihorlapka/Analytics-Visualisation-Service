@@ -1,16 +1,18 @@
 package com.iot.devices.management.analytics_visualisation_service.analytics;
 
+import com.google.common.collect.Range;
 import com.iot.devices.management.analytics_visualisation_service.persistence.mongo.model.EnergyMeterEvent;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BinaryOperator;
 
-import static com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceStatus.ONLINE;
 import static com.iot.devices.management.analytics_visualisation_service.util.OptionalUtils.ifAllPresentGet;
 
 @Getter
@@ -18,35 +20,36 @@ import static com.iot.devices.management.analytics_visualisation_service.util.Op
 @RequiredArgsConstructor(staticName = "of")
 public class EnergyMeterAnalytic implements Analytic<EnergyMeterEvent> {
 
-    private final Float avgVoltage;
-    private final Float avgCurrent;
-    private final Float avgPower;
-    private final Float avgEnergyConsumed;
+    @Nullable private final Float avgVoltage;
+    @Nullable private final Float avgCurrent;
+    @Nullable private final Float avgPower;
+    @Nullable private final Float avgEnergyConsumed;
 
-    private final Float maxVoltage;
-    private final Float maxCurrent;
-    private final Float maxPower;
-    private final Float maxEnergyConsumed;
+    @Nullable private final Float maxVoltage;
+    @Nullable private final Float maxCurrent;
+    @Nullable private final Float maxPower;
+    @Nullable private final Float maxEnergyConsumed;
 
-    private final Float minVoltage;
-    private final Float minCurrent;
-    private final Float minPower;
-    private final Float minEnergyConsumed;
+    @Nullable private final Float minVoltage;
+    @Nullable private final Float minCurrent;
+    @Nullable private final Float minPower;
+    @Nullable private final Float minEnergyConsumed;
 
 
     @Override
     public EnergyMeterAnalytic calculate(List<EnergyMeterEvent> events) {
         return ifAllPresentGet(
-                calculate(events, this::calculateAvg),
-                calculate(events, Math::max),
-                calculate(events, Math::min),
+                calculate(events, this::avg),
+                calculate(events, this::max),
+                calculate(events, this::min),
                 this::combineAnalytic)
                 .orElseThrow(() -> new IllegalStateException("Analytic calculation failed"));
     }
 
     private Optional<AnalyticParams> calculate(List<EnergyMeterEvent> events, BinaryOperator<Float> accumulator) {
+        final List<Range<Instant>> onlineTimeRanges = getOnlineTimeRanges(events);
         return events.stream()
-                .filter(event -> ONLINE.equals(event.getStatus()))
+                .filter(event -> isOnline(event, onlineTimeRanges))
                 .map(event -> AnalyticParams.of(event.getVoltage(), event.getCurrent(),
                         event.getPower(), event.getEnergyConsumed()))
                 .reduce(accumulate(accumulator));
@@ -71,9 +74,9 @@ public class EnergyMeterAnalytic implements Analytic<EnergyMeterEvent> {
 
     @Value(staticConstructor = "of")
     static class AnalyticParams {
-        Float voltage;
-        Float current;
-        Float power;
-        Float energyConsumed;
+        @Nullable Float voltage;
+        @Nullable Float current;
+        @Nullable Float power;
+        @Nullable Float energyConsumed;
     }
 }

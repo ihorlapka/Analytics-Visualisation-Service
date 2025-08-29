@@ -1,16 +1,18 @@
 package com.iot.devices.management.analytics_visualisation_service.analytics;
 
+import com.google.common.collect.Range;
 import com.iot.devices.management.analytics_visualisation_service.persistence.mongo.model.SoilMoistureSensorEvent;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BinaryOperator;
 
-import static com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceStatus.ONLINE;
 import static com.iot.devices.management.analytics_visualisation_service.util.OptionalUtils.ifAllPresentGet;
 
 @Getter
@@ -18,19 +20,19 @@ import static com.iot.devices.management.analytics_visualisation_service.util.Op
 @RequiredArgsConstructor(staticName = "of")
 public class SoilMoistureAnalytic implements Analytic<SoilMoistureSensorEvent> {
 
-    private final Float avgMoisturePercentage;
-    private final Float avgSoilTemperature;
+    @Nullable private final Float avgMoisturePercentage;
+    @Nullable private final Float avgSoilTemperature;
 
-    private final Float maxMoisturePercentage;
-    private final Float maxSoilTemperature;
+    @Nullable private final Float maxMoisturePercentage;
+    @Nullable private final Float maxSoilTemperature;
 
-    private final Float minMoisturePercentage;
-    private final Float minSoilTemperature;
+    @Nullable private final Float minMoisturePercentage;
+    @Nullable private final Float minSoilTemperature;
 
     @Override
     public SoilMoistureAnalytic calculate(List<SoilMoistureSensorEvent> events) {
         return ifAllPresentGet(
-                calculate(events, this::calculateAvg),
+                calculate(events, this::avg),
                 calculate(events, Math::max),
                 calculate(events, Math::min),
                 this::combineAnalytic)
@@ -38,9 +40,9 @@ public class SoilMoistureAnalytic implements Analytic<SoilMoistureSensorEvent> {
     }
 
     private Optional<AnalyticParams> calculate(List<SoilMoistureSensorEvent> events, BinaryOperator<Float> accumulator) {
+        final List<Range<Instant>> onlineTimeRanges = getOnlineTimeRanges(events);
         return events.stream()
-                .filter(event -> ONLINE.equals(event.getStatus()))
-                .filter(event -> event.getBatteryLevel() > 0)
+                .filter(event -> isOnline(event, onlineTimeRanges))
                 .map(event -> AnalyticParams.of(event.getMoisturePercentage(), event.getSoilTemperature()))
                 .reduce(accumulate(accumulator));
     }
@@ -61,7 +63,7 @@ public class SoilMoistureAnalytic implements Analytic<SoilMoistureSensorEvent> {
 
     @Value(staticConstructor = "of")
     static class AnalyticParams {
-        Float moisturePercentage;
-        Float soilTemperature;
+        @Nullable Float moisturePercentage;
+        @Nullable Float soilTemperature;
     }
 }
