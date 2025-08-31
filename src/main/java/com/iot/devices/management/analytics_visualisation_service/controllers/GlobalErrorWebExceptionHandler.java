@@ -8,6 +8,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.codec.ServerCodecConfigurer;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.server.*;
@@ -27,8 +28,11 @@ public class GlobalErrorWebExceptionHandler extends AbstractErrorWebExceptionHan
 
     public GlobalErrorWebExceptionHandler(ErrorAttributes errorAttributes,
                                           WebProperties.Resources resources,
-                                          ApplicationContext applicationContext) {
+                                          ApplicationContext applicationContext,
+                                          ServerCodecConfigurer configurer) {
         super(errorAttributes, resources, applicationContext);
+        super.setMessageWriters(configurer.getWriters());
+        super.setMessageReaders(configurer.getReaders());
     }
 
     @Override
@@ -41,7 +45,7 @@ public class GlobalErrorWebExceptionHandler extends AbstractErrorWebExceptionHan
         Throwable error = getError(request);
 
         if (isClientError(error)) {
-            errorPropertiesMap.put(MESSAGE, "Some params in request are not se properly!");
+            errorPropertiesMap.put(MESSAGE, "Some params in request are not set properly!");
             return ServerResponse.status(HttpStatus.BAD_REQUEST)
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(BodyInserters.fromValue(errorPropertiesMap));
