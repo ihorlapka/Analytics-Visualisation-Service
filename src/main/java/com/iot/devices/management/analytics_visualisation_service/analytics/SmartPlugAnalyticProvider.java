@@ -1,7 +1,8 @@
 package com.iot.devices.management.analytics_visualisation_service.analytics;
 
 import com.google.common.collect.Range;
-import com.iot.devices.management.analytics_visualisation_service.persistence.mongo.model.SmartLightEvent;
+import com.iot.devices.management.analytics_visualisation_service.analytics.model.SmartPlugAnalytic;
+import com.iot.devices.management.analytics_visualisation_service.dto.SmartPlugDto;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
@@ -18,19 +19,10 @@ import static com.iot.devices.management.analytics_visualisation_service.util.Op
 @Getter
 @Component
 @RequiredArgsConstructor(staticName = "of")
-public class SmartLightAnalytic implements Analytic<SmartLightEvent> {
-
-    @Nullable private final Float avgBrightness;
-    @Nullable private final Float avgPowerConsumption;
-
-    @Nullable private final Float maxBrightness;
-    @Nullable private final Float maxPowerConsumption;
-
-    @Nullable private final Float minBrightness;
-    @Nullable private final Float minPowerConsumption;
+public class SmartPlugAnalyticProvider implements AnalyticProvider<SmartPlugDto, SmartPlugAnalytic> {
 
     @Override
-    public Analytic<SmartLightEvent> calculate(List<SmartLightEvent> events) {
+    public SmartPlugAnalytic calculate(List<SmartPlugDto> events) {
         return ifAllPresentGet(
                 calculate(events, this::avg),
                 calculate(events, this::max),
@@ -39,31 +31,33 @@ public class SmartLightAnalytic implements Analytic<SmartLightEvent> {
                 .orElseThrow(() -> new IllegalStateException("Analytic calculation failed"));
     }
 
-    private Optional<AnalyticParams> calculate(List<SmartLightEvent> events, BinaryOperator<Float> accumulator) {
+    private Optional<AnalyticParams> calculate(List<SmartPlugDto> events, BinaryOperator<Float> accumulator) {
         final List<Range<Instant>> onlineTimeRanges = getOnlineTimeRanges(events);
         return events.stream()
                 .filter(event -> isOnline(event, onlineTimeRanges))
-                .map(event -> AnalyticParams.of(intToFloat(event.getBrightness()), event.getPowerConsumption()))
+                .map(event -> AnalyticParams.of(event.getVoltage(), event.getCurrent(), event.getPowerUsage()))
                 .reduce(accumulate(accumulator));
     }
 
     private BinaryOperator<AnalyticParams> accumulate(BinaryOperator<Float> accumulator) {
         return (p1, p2) -> AnalyticParams.of(
-                accumulator.apply(p1.getBrightness(), p2.getBrightness()),
-                accumulator.apply(p1.getPowerConsumption(), p2.getPowerConsumption()));
+                accumulator.apply(p1.getVoltage(), p2.getVoltage()),
+                accumulator.apply(p1.getCurrent(), p2.getCurrent()),
+                accumulator.apply(p1.getPowerUsage(), p2.getPowerUsage()));
     }
 
-    private SmartLightAnalytic combineAnalytic(AnalyticParams avg, AnalyticParams max, AnalyticParams min) {
-        return SmartLightAnalytic.of(
-                avg.getBrightness(), avg.getPowerConsumption(),
-                max.getBrightness(), max.getPowerConsumption(),
-                min.getBrightness(), min.getPowerConsumption()
+    private SmartPlugAnalytic combineAnalytic(AnalyticParams avg, AnalyticParams max, AnalyticParams min) {
+        return SmartPlugAnalytic.of(
+                avg.getVoltage(), avg.getCurrent(), avg.getPowerUsage(),
+                max.getVoltage(), max.getCurrent(), max.getPowerUsage(),
+                min.getVoltage(), min.getCurrent(), min.getPowerUsage()
         );
     }
 
     @Value(staticConstructor = "of")
     static class AnalyticParams {
-        @Nullable Float brightness;
-        @Nullable Float powerConsumption;
+        @Nullable Float voltage;
+        @Nullable Float current;
+        @Nullable Float powerUsage;
     }
 }

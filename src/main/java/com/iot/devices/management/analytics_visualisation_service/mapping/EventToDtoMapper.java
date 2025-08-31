@@ -1,10 +1,52 @@
-package com.iot.devices.management.analytics_visualisation_service.dto;
+package com.iot.devices.management.analytics_visualisation_service.mapping;
 
+import com.google.common.collect.ImmutableMap;
+import com.iot.devices.SmartPlug;
+import com.iot.devices.Thermostat;
+import com.iot.devices.management.analytics_visualisation_service.dto.*;
+import com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceType;
 import com.iot.devices.management.analytics_visualisation_service.persistence.mongo.model.*;
 import lombok.experimental.UtilityClass;
 
+import java.util.Map;
+import java.util.function.Function;
+
+import static com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceType.*;
+
 @UtilityClass
-public class DtoMapper {
+public class EventToDtoMapper {
+
+    private static final Map<DeviceType, TelemetryMapper<?, ?>> MAPPER_BY_TYPE = ImmutableMap.<DeviceType, TelemetryMapper<?, ?>>builder()
+            .put(DOOR_SENSOR, (TelemetryMapper<DoorSensorEvent, DoorSensorDto>) EventToDtoMapper::mapDoorSensor)
+            .put(ENERGY_METER, (TelemetryMapper<EnergyMeterEvent, EnergyMeterDto>) EventToDtoMapper::mapEnergyMeter)
+            .put(SMART_LIGHT, (TelemetryMapper<SmartLightEvent, SmartLightDto>) EventToDtoMapper::mapSmartLight)
+            .put(SMART_PLUG, (TelemetryMapper<SmartPlugEvent, SmartPlugDto>) EventToDtoMapper::mapSmartPlug)
+            .put(SOIL_MOISTURE_SENSOR, (TelemetryMapper<SoilMoistureSensorEvent, SoilMoistureSensorDto>) EventToDtoMapper::mapSoilMoistureSensor)
+            .put(TEMPERATURE_SENSOR, (TelemetryMapper<TemperatureSensorEvent, TemperatureSensorDto>) EventToDtoMapper::mapTemperatureSensor)
+            .put(THERMOSTAT, (TelemetryMapper<ThermostatEvent, ThermostatDto>) EventToDtoMapper::mapThermostat)
+            .build();
+
+    @SuppressWarnings("unchecked")
+    public static TelemetryDto mapToDto(TelemetryEvent event) {
+        final TelemetryMapper<TelemetryEvent, TelemetryDto> mapper = (TelemetryMapper<TelemetryEvent, TelemetryDto>) MAPPER_BY_TYPE.get(getDeviceType(event));
+        if (mapper == null) {
+            throw new IllegalArgumentException("No mapper for class: " + event.getClass());
+        }
+        return mapper.apply(event);
+    }
+
+    private DeviceType getDeviceType(TelemetryEvent event) {
+        return switch (event) {
+            case DoorSensorEvent ds -> DOOR_SENSOR;
+            case EnergyMeterEvent em -> ENERGY_METER;
+            case SmartLightEvent sl -> SMART_LIGHT;
+            case SmartPlug sp -> SMART_PLUG;
+            case SoilMoistureSensorEvent sms -> SOIL_MOISTURE_SENSOR;
+            case TemperatureSensorEvent ts -> TEMPERATURE_SENSOR;
+            case Thermostat t -> THERMOSTAT;
+            default -> throw new IllegalArgumentException("Unknown event type");
+        };
+    }
 
     public static DoorSensorDto mapDoorSensor(DoorSensorEvent ds) {
         return new DoorSensorDto(
@@ -89,4 +131,7 @@ public class DtoMapper {
                 sms.getFirmwareVersion(),
                 sms.getLastUpdated());
     }
+
+    @FunctionalInterface
+    interface TelemetryMapper<E extends TelemetryEvent, D extends TelemetryDto> extends Function<E, D> {}
 }

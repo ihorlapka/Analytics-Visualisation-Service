@@ -1,7 +1,8 @@
 package com.iot.devices.management.analytics_visualisation_service.stream;
 
 import com.iot.devices.*;
-import com.iot.devices.management.analytics_visualisation_service.persistence.mongo.model.*;
+import com.iot.devices.management.analytics_visualisation_service.dto.TelemetryDto;
+import com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceType;
 import lombok.RequiredArgsConstructor;
 import org.apache.avro.specific.SpecificRecord;
 import org.springframework.stereotype.Component;
@@ -13,7 +14,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static com.iot.devices.management.analytics_visualisation_service.mapping.EventsMapper.*;
+import static com.iot.devices.management.analytics_visualisation_service.mapping.RecordToDtoMapper.*;
+import static com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceType.*;
 import static java.util.Optional.ofNullable;
 
 @Component
@@ -22,21 +24,21 @@ public class TelemetryStream {
 
     public static final int HISTORY_SIZE = 100;
 
-    private final Map<Class<? extends TelemetryEvent>, Sinks.Many<TelemetryEvent>> sinkByClass = new ConcurrentHashMap<>();
+    private final Map<DeviceType, Sinks.Many<TelemetryDto>> sinkByClass = new ConcurrentHashMap<>();
 
     public Mono<Void> publish(SpecificRecord record) {
-        return Mono.just(sinkByClass.compute(mapClass(record), (k, v) -> {
+        return Mono.just(sinkByClass.compute(getType(record), (k, v) -> {
             if (v == null) {
                 v = Sinks.many().replay().limit(HISTORY_SIZE);
             }
-            v.tryEmitNext(map(record));
+            v.tryEmitNext(mapToDto(record));
             return v;
         })).then();
     }
 
     @SuppressWarnings("unchecked")
-    public <T extends TelemetryEvent> Flux<T> getStream(Class<T> clazz, UUID deviceId) {
-        return ofNullable(sinkByClass.get(clazz))
+    public <T extends TelemetryDto> Flux<T> getStream(DeviceType deviceType, UUID deviceId) {
+        return ofNullable(sinkByClass.get(deviceType))
                 .map(eventMany -> eventMany
                         .asFlux()
                         .filter(event -> event.getDeviceId().equals(deviceId))
@@ -49,28 +51,15 @@ public class TelemetryStream {
         sinkByClass.clear();
     }
 
-    private Class<? extends TelemetryEvent> mapClass(SpecificRecord record) {
+    private DeviceType getType(SpecificRecord record) {
         return switch (record) {
-            case DoorSensor ignored -> DoorSensorEvent.class;
-            case EnergyMeter ignored -> EnergyMeterEvent.class;
-            case SmartLight ignored -> SmartLightEvent.class;
-            case SmartPlug ignored -> SmartPlugEvent.class;
-            case SoilMoistureSensor ignored -> SoilMoistureSensorEvent.class;
-            case TemperatureSensor ignored -> TemperatureSensorEvent.class;
-            case Thermostat ignored -> ThermostatEvent.class;
-            default -> throw new IllegalArgumentException("Unknown device type");
-        };
-    }
-
-    private TelemetryEvent map(SpecificRecord record) {
-        return switch (record) {
-            case DoorSensor ds -> mapDoorSensor(ds);
-            case EnergyMeter em -> mapEnergyMeter(em);
-            case SmartLight sl -> mapSmartLight(sl);
-            case SmartPlug sp -> mapSmartPlug(sp);
-            case SoilMoistureSensor sms -> mapSoilMoistureSensor(sms);
-            case TemperatureSensor ts -> mapTemperatureSensor(ts);
-            case Thermostat t -> mapThermostat(t);
+            case DoorSensor ignored -> DOOR_SENSOR;
+            case EnergyMeter ignored -> ENERGY_METER;
+            case SmartLight ignored -> SMART_LIGHT;
+            case SmartPlug ignored -> SMART_PLUG;
+            case SoilMoistureSensor ignored -> SOIL_MOISTURE_SENSOR;
+            case TemperatureSensor ignored -> TEMPERATURE_SENSOR;
+            case Thermostat ignored -> THERMOSTAT;
             default -> throw new IllegalArgumentException("Unknown device type");
         };
     }

@@ -1,7 +1,8 @@
 package com.iot.devices.management.analytics_visualisation_service.analytics;
 
 import com.google.common.collect.Range;
-import com.iot.devices.management.analytics_visualisation_service.persistence.mongo.model.TemperatureSensorEvent;
+import com.iot.devices.management.analytics_visualisation_service.analytics.model.TemperatureSensorAnalytic;
+import com.iot.devices.management.analytics_visualisation_service.dto.TemperatureSensorDto;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
@@ -16,22 +17,10 @@ import static com.iot.devices.management.analytics_visualisation_service.util.Op
 
 @Getter
 @RequiredArgsConstructor(staticName = "of")
-public class TemperatureSensorAnalytic implements Analytic<TemperatureSensorEvent> {
-
-    @Nullable private final Float avgTemperature;
-    @Nullable private final Float avgHumidity;
-    @Nullable private final Float avgPressure;
-
-    @Nullable private final Float maxTemperature;
-    @Nullable private final Float maxHumidity;
-    @Nullable private final Float maxPressure;
-
-    @Nullable private final Float minTemperature;
-    @Nullable private final Float minHumidity;
-    @Nullable private final Float minPressure;
+public class TemperatureSensorAnalyticProvider implements AnalyticProvider<TemperatureSensorDto, TemperatureSensorAnalytic> {
 
     @Override
-    public TemperatureSensorAnalytic calculate(List<TemperatureSensorEvent> events) {
+    public TemperatureSensorAnalytic calculate(List<TemperatureSensorDto> events) {
         return ifAllPresentGet(
                 calculate(events, this::avg),
                 calculate(events, this::max),
@@ -40,7 +29,7 @@ public class TemperatureSensorAnalytic implements Analytic<TemperatureSensorEven
                 .orElseThrow(() -> new IllegalStateException("Analytic calculation failed"));
     }
 
-    private Optional<AnalyticParams> calculate(List<TemperatureSensorEvent> events, BinaryOperator<Float> accumulator) {
+    private Optional<AnalyticParams> calculate(List<TemperatureSensorDto> events, BinaryOperator<Float> accumulator) {
         final List<Range<Instant>> onlineTimeRanges = getOnlineTimeRanges(events);
         return events.stream()
                 .filter(event -> isOnline(event, onlineTimeRanges))

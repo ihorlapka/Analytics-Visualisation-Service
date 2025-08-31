@@ -14,5 +14,32 @@ public record ThermostatDto(
         ThermostatMode mode,
         DeviceStatus status,
         String firmwareVersion,
-        Instant lastUpdated) {
+        Instant lastUpdated) implements TelemetryDto {
+
+    @Override
+    public UUID getDeviceId() {
+        return deviceId;
+    }
+
+    @Override
+    public Instant getLastUpdated() {
+        return lastUpdated;
+    }
+
+    @Override
+    public DeviceStatus getStatus() {
+        return status;
+    }
+
+    public Float getCurrentTemperature() {
+        return currentTemperature;
+    }
+
+    public Float getTargetTemperature() {
+        return targetTemperature;
+    }
+
+    public Float getHumidity() {
+        return humidity;
+    }
 }

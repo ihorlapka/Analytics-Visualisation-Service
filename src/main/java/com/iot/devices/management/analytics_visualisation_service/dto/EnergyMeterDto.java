@@ -14,5 +14,36 @@ public record EnergyMeterDto(
         Float energyConsumed,
         DeviceStatus status,
         String firmwareVersion,
-        Instant lastUpdated) {
+        Instant lastUpdated) implements TelemetryDto {
+
+    @Override
+    public UUID getDeviceId() {
+        return deviceId;
+    }
+
+    @Override
+    public Instant getLastUpdated() {
+        return lastUpdated;
+    }
+
+    @Override
+    public DeviceStatus getStatus() {
+        return status;
+    }
+
+    public Float getVoltage() {
+        return voltage;
+    }
+
+    public Float getCurrent() {
+        return current;
+    }
+
+    public Float getPower() {
+        return power;
+    }
+
+    public Float getEnergyConsumed() {
+        return energyConsumed;
+    }
 }

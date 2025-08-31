@@ -1,9 +1,10 @@
 package com.iot.devices.management.analytics_visualisation_service.analytics;
 
-import com.iot.devices.management.analytics_visualisation_service.persistence.mongo.model.DoorSensorEvent;
+import com.iot.devices.management.analytics_visualisation_service.analytics.model.DoorSensorAnalytic;
+import com.iot.devices.management.analytics_visualisation_service.dto.DoorSensorDto;
+
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -12,27 +13,23 @@ import java.util.Objects;
 @Getter
 @Component
 @RequiredArgsConstructor(staticName = "of")
-public class DoorSensorAnalytic implements Analytic<DoorSensorEvent> {
-
-    @Nullable private final Integer openCount;
-    @Nullable private final Boolean temperAlert;
-
+public class DoorSensorAnalyticProvider implements AnalyticProvider<DoorSensorDto, DoorSensorAnalytic> {
 
     @Override
-    public Analytic<DoorSensorEvent> calculate(List<DoorSensorEvent> events) {
+    public DoorSensorAnalytic calculate(List<DoorSensorDto> events) {
         return events.stream()
-                .map(event -> DoorSensorAnalytic.of(increaseIfOpened(event), event.getTamperAlert()))
+                .map(event -> DoorSensorAnalytic.of(increaseIfOpened(event), event.getIsTamperAlert()))
                 .reduce((a, b) -> DoorSensorAnalytic.of(
-                        calculate(a.getOpenCount(), b.getOpenCount(), Integer::sum),
+                        calculateValue(a.getOpenCount(), b.getOpenCount(), Integer::sum),
                         isTemperAlert(a.getTemperAlert(), b.getTemperAlert())))
                 .orElseThrow(() -> new IllegalStateException("Analytic calculation failed"));
     }
 
-    private Integer increaseIfOpened(DoorSensorEvent event) {
-        if (event.getLastOpened() == null || event.getLastUpdated() == null) {
+    private Integer increaseIfOpened(DoorSensorDto event) {
+        if (event.getIsLastOpened() == null) {
             return null;
         }
-        return Objects.equals(event.getLastOpened(), event.getLastUpdated()) ? 1 : 0;
+        return Objects.equals(event.getIsLastOpened(), event.getLastUpdated()) ? 1 : 0;
     }
 
     private Boolean isTemperAlert(Boolean a, Boolean b) {

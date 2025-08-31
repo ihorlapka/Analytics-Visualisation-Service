@@ -1,7 +1,8 @@
 package com.iot.devices.management.analytics_visualisation_service.analytics;
 
 import com.google.common.collect.Range;
-import com.iot.devices.management.analytics_visualisation_service.persistence.mongo.model.ThermostatEvent;
+import com.iot.devices.management.analytics_visualisation_service.analytics.model.ThermostatAnalytic;
+import com.iot.devices.management.analytics_visualisation_service.dto.ThermostatDto;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
@@ -16,22 +17,10 @@ import static com.iot.devices.management.analytics_visualisation_service.util.Op
 
 @Getter
 @RequiredArgsConstructor(staticName = "of")
-public class ThermostatAnalytic implements Analytic<ThermostatEvent> {
-
-    @Nullable private final Float avgCurrentTemperature;
-    @Nullable private final Float avgTargetTemperature;
-    @Nullable private final Float avgHumidity;
-
-    @Nullable private final Float maxCurrentTemperature;
-    @Nullable private final Float maxTargetTemperature;
-    @Nullable private final Float maxHumidity;
-
-    @Nullable private final Float minCurrentTemperature;
-    @Nullable private final Float minTargetTemperature;
-    @Nullable private final Float minHumidity;
+public class ThermostatAnalyticProvider implements AnalyticProvider<ThermostatDto, ThermostatAnalytic> {
 
     @Override
-    public ThermostatAnalytic calculate(List<ThermostatEvent> events) {
+    public ThermostatAnalytic calculate(List<ThermostatDto> events) {
         return ifAllPresentGet(
                 calculate(events, this::avg),
                 calculate(events, this::max),
@@ -40,7 +29,7 @@ public class ThermostatAnalytic implements Analytic<ThermostatEvent> {
                 .orElseThrow(() -> new IllegalStateException("Analytic calculation failed"));
     }
 
-    private Optional<AnalyticParams> calculate(List<ThermostatEvent> events, BinaryOperator<Float> accumulator) {
+    private Optional<AnalyticParams> calculate(List<ThermostatDto> events, BinaryOperator<Float> accumulator) {
         final List<Range<Instant>> onlineTimeRanges = getOnlineTimeRanges(events);
         return events.stream()
                 .filter(event -> isOnline(event, onlineTimeRanges))

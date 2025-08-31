@@ -1,12 +1,12 @@
 package com.iot.devices.management.analytics_visualisation_service.kafka;
 
 import com.iot.devices.*;
+import com.iot.devices.management.analytics_visualisation_service.dto.DoorSensorDto;
+import com.iot.devices.management.analytics_visualisation_service.dto.SmartPlugDto;
+import com.iot.devices.management.analytics_visualisation_service.dto.ThermostatDto;
 import com.iot.devices.management.analytics_visualisation_service.health.HealthConfig;
 import com.iot.devices.management.analytics_visualisation_service.kafka.producer.KafkaProducerProperties;
 import com.iot.devices.management.analytics_visualisation_service.kafka.producer.TestKafkaProducer;
-import com.iot.devices.management.analytics_visualisation_service.persistence.mongo.model.DoorSensorEvent;
-import com.iot.devices.management.analytics_visualisation_service.persistence.mongo.model.SmartPlugEvent;
-import com.iot.devices.management.analytics_visualisation_service.persistence.mongo.model.ThermostatEvent;
 import com.iot.devices.management.analytics_visualisation_service.stream.TelemetryStream;
 import io.micrometer.core.instrument.MockClock;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
@@ -33,7 +33,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.UUID;
 
 import static com.iot.devices.DoorState.OPEN;
-import static com.iot.devices.management.analytics_visualisation_service.mapping.EventsMapper.*;
+import static com.iot.devices.management.analytics_visualisation_service.mapping.RecordToDtoMapper.*;
+import static com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceType.*;
 import static org.mockito.Mockito.*;
 
 @Slf4j
@@ -114,17 +115,17 @@ public class ReactiveKafkaConsumerRunnerTest {
         when(telemetryStream.publish(thermostat)).thenCallRealMethod();
         when(telemetryStream.publish(smartPlug)).thenCallRealMethod();
 
-        StepVerifier.create(telemetryStream.getStream(DoorSensorEvent.class, deviceId1))
+        StepVerifier.create(telemetryStream.getStream(DOOR_SENSOR, deviceId1))
                 .expectNext(mapDoorSensor(doorSensor))
                 .thenCancel()
                 .verify();
 
-        StepVerifier.create(telemetryStream.getStream(ThermostatEvent.class, deviceId2))
+        StepVerifier.create(telemetryStream.getStream(THERMOSTAT, deviceId2))
                 .expectNext(mapThermostat(thermostat))
                 .thenCancel()
                 .verify();
 
-        StepVerifier.create(telemetryStream.getStream(SmartPlugEvent.class, deviceId3))
+        StepVerifier.create(telemetryStream.getStream(SMART_PLUG, deviceId3))
                 .expectNext(mapSmartPlug(smartPlug))
                 .thenCancel()
                 .verify();
@@ -148,9 +149,9 @@ public class ReactiveKafkaConsumerRunnerTest {
                 .thenReturn(Mono.empty());
         when(telemetryStream.publish(smartPlug)).thenCallRealMethod();
 
-        Flux<DoorSensorEvent> doorSensorStream = telemetryStream.getStream(DoorSensorEvent.class, deviceId1);
-        Flux<ThermostatEvent> thermostatStream = telemetryStream.getStream(ThermostatEvent.class, deviceId2);
-        Flux<SmartPlugEvent> smartPlugEventStream = telemetryStream.getStream(SmartPlugEvent.class, deviceId3);
+        Flux<DoorSensorDto> doorSensorStream = telemetryStream.getStream(DOOR_SENSOR, deviceId1);
+        Flux<ThermostatDto> thermostatStream = telemetryStream.getStream(THERMOSTAT, deviceId2);
+        Flux<SmartPlugDto> smartPlugEventStream = telemetryStream.getStream(SMART_PLUG, deviceId3);
 
         StepVerifier.create(doorSensorStream)
                 .expectNext(mapDoorSensor(doorSensor))
@@ -186,9 +187,9 @@ public class ReactiveKafkaConsumerRunnerTest {
         sendMessage(kafkaProducer.sendMessage(thermostat, deviceId2));
         sendMessage(kafkaProducer.sendMessage(smartPlug, deviceId3));
 
-        Flux<DoorSensorEvent> doorSensorStream = telemetryStream.getStream(DoorSensorEvent.class, deviceId1);
-        Flux<ThermostatEvent> thermostatEvent = telemetryStream.getStream(ThermostatEvent.class, deviceId2);
-        Flux<SmartPlugEvent> smartPlugEventStream = telemetryStream.getStream(SmartPlugEvent.class, deviceId3);
+        Flux<DoorSensorDto> doorSensorStream = telemetryStream.getStream(DOOR_SENSOR, deviceId1);
+        Flux<ThermostatDto> thermostatEvent = telemetryStream.getStream(THERMOSTAT, deviceId2);
+        Flux<SmartPlugDto> smartPlugEventStream = telemetryStream.getStream(SMART_PLUG, deviceId3);
 
         StepVerifier.create(doorSensorStream)
                 .expectNext(mapDoorSensor(doorSensor))

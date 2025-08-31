@@ -1,8 +1,9 @@
 package com.iot.devices.management.analytics_visualisation_service.analytics;
 
 import com.google.common.collect.Range;
+import com.iot.devices.management.analytics_visualisation_service.analytics.model.Analytic;
+import com.iot.devices.management.analytics_visualisation_service.dto.TelemetryDto;
 import com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceStatus;
-import com.iot.devices.management.analytics_visualisation_service.persistence.mongo.model.TelemetryEvent;
 import org.springframework.lang.Nullable;
 
 import java.math.BigDecimal;
@@ -15,26 +16,26 @@ import java.util.function.BinaryOperator;
 import static com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceStatus.*;
 import static java.math.RoundingMode.HALF_UP;
 
-public interface Analytic<T extends TelemetryEvent> {
+public interface AnalyticProvider<T extends TelemetryDto, U extends Analytic> {
 
-    Analytic<T> calculate(List<T> events);
+    U calculate(List<T> events);
 
     default Float avg(Float param1, Float param2) {
-        return calculate(param1, param2, (p1, p2) ->
+        return calculateValue(param1, param2, (p1, p2) ->
                 BigDecimal.valueOf(param1 + param2)
                         .divide(BigDecimal.valueOf(2), 3, HALF_UP)
                         .floatValue());
     }
 
     default Float max(Float param1, Float param2) {
-        return calculate(param1, param2, (p1, p2) -> Math.max(param1, param2));
+        return calculateValue(param1, param2, (p1, p2) -> Math.max(param1, param2));
     }
 
     default Float min(Float param1, Float param2) {
-        return calculate(param1, param2, (p1, p2) -> Math.min(param1, param2));
+        return calculateValue(param1, param2, (p1, p2) -> Math.min(param1, param2));
     }
 
-    default<N extends Number> N calculate(N param1, N param2, BinaryOperator<N> operation) {
+    default<N extends Number> N calculateValue(N param1, N param2, BinaryOperator<N> operation) {
         if (param1 == null && param2 == null) {
             return null;
         }
@@ -51,7 +52,7 @@ public interface Analytic<T extends TelemetryEvent> {
         return (brightness == null) ? null : (float) brightness;
     }
 
-    default <E extends TelemetryEvent> List<Range<Instant>> getOnlineTimeRanges(List<E> events) {
+    default <E extends TelemetryDto> List<Range<Instant>> getOnlineTimeRanges(List<E> events) {
         final Set<DeviceStatus> notNeededStatuses = Set.of(OFFLINE, MAINTENANCE, ERROR);
         final List<Instant> startTimes = new ArrayList<>();
         final List<Instant> endTimes = new ArrayList<>();
@@ -67,7 +68,7 @@ public interface Analytic<T extends TelemetryEvent> {
                 isRangeStart = false;
             }
         }
-        final int rangesSize = calculate(startTimes.size(), endTimes.size(), Math::max);
+        final int rangesSize = calculateValue(startTimes.size(), endTimes.size(), Math::max);
         final List<Range<Instant>> onlineTimeRanges = new ArrayList<>(rangesSize);
         for (int i = 0; i < rangesSize; i++) {
             if (startTimes.size() > i && endTimes.size() > i) {
@@ -79,7 +80,7 @@ public interface Analytic<T extends TelemetryEvent> {
         return onlineTimeRanges;
     }
 
-    default <E extends TelemetryEvent> boolean isOnline(E event, List<Range<Instant>> onlineTimeRanges) {
+    default <E extends TelemetryDto> boolean isOnline(E event, List<Range<Instant>> onlineTimeRanges) {
         return onlineTimeRanges.stream()
                 .anyMatch(range -> range.contains(event.getLastUpdated()));
     }

@@ -1,7 +1,8 @@
 package com.iot.devices.management.analytics_visualisation_service.analytics;
 
 import com.google.common.collect.Range;
-import com.iot.devices.management.analytics_visualisation_service.persistence.mongo.model.SoilMoistureSensorEvent;
+import com.iot.devices.management.analytics_visualisation_service.analytics.model.SoilMoistureAnalytic;
+import com.iot.devices.management.analytics_visualisation_service.dto.SoilMoistureSensorDto;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
@@ -18,19 +19,10 @@ import static com.iot.devices.management.analytics_visualisation_service.util.Op
 @Getter
 @Component
 @RequiredArgsConstructor(staticName = "of")
-public class SoilMoistureAnalytic implements Analytic<SoilMoistureSensorEvent> {
-
-    @Nullable private final Float avgMoisturePercentage;
-    @Nullable private final Float avgSoilTemperature;
-
-    @Nullable private final Float maxMoisturePercentage;
-    @Nullable private final Float maxSoilTemperature;
-
-    @Nullable private final Float minMoisturePercentage;
-    @Nullable private final Float minSoilTemperature;
+public class SoilMoistureAnalyticProvider implements AnalyticProvider<SoilMoistureSensorDto, SoilMoistureAnalytic> {
 
     @Override
-    public SoilMoistureAnalytic calculate(List<SoilMoistureSensorEvent> events) {
+    public SoilMoistureAnalytic calculate(List<SoilMoistureSensorDto> events) {
         return ifAllPresentGet(
                 calculate(events, this::avg),
                 calculate(events, Math::max),
@@ -39,7 +31,7 @@ public class SoilMoistureAnalytic implements Analytic<SoilMoistureSensorEvent> {
                 .orElseThrow(() -> new IllegalStateException("Analytic calculation failed"));
     }
 
-    private Optional<AnalyticParams> calculate(List<SoilMoistureSensorEvent> events, BinaryOperator<Float> accumulator) {
+    private Optional<AnalyticParams> calculate(List<SoilMoistureSensorDto> events, BinaryOperator<Float> accumulator) {
         final List<Range<Instant>> onlineTimeRanges = getOnlineTimeRanges(events);
         return events.stream()
                 .filter(event -> isOnline(event, onlineTimeRanges))

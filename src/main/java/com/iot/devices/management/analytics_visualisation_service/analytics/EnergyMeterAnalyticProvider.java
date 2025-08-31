@@ -1,7 +1,8 @@
 package com.iot.devices.management.analytics_visualisation_service.analytics;
 
 import com.google.common.collect.Range;
-import com.iot.devices.management.analytics_visualisation_service.persistence.mongo.model.EnergyMeterEvent;
+import com.iot.devices.management.analytics_visualisation_service.analytics.model.EnergyMeterAnalytic;
+import com.iot.devices.management.analytics_visualisation_service.dto.EnergyMeterDto;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
@@ -18,26 +19,10 @@ import static com.iot.devices.management.analytics_visualisation_service.util.Op
 @Getter
 @Component
 @RequiredArgsConstructor(staticName = "of")
-public class EnergyMeterAnalytic implements Analytic<EnergyMeterEvent> {
-
-    @Nullable private final Float avgVoltage;
-    @Nullable private final Float avgCurrent;
-    @Nullable private final Float avgPower;
-    @Nullable private final Float avgEnergyConsumed;
-
-    @Nullable private final Float maxVoltage;
-    @Nullable private final Float maxCurrent;
-    @Nullable private final Float maxPower;
-    @Nullable private final Float maxEnergyConsumed;
-
-    @Nullable private final Float minVoltage;
-    @Nullable private final Float minCurrent;
-    @Nullable private final Float minPower;
-    @Nullable private final Float minEnergyConsumed;
-
+public class EnergyMeterAnalyticProvider implements AnalyticProvider<EnergyMeterDto, EnergyMeterAnalytic> {
 
     @Override
-    public EnergyMeterAnalytic calculate(List<EnergyMeterEvent> events) {
+    public EnergyMeterAnalytic calculate(List<EnergyMeterDto> events) {
         return ifAllPresentGet(
                 calculate(events, this::avg),
                 calculate(events, this::max),
@@ -46,7 +31,7 @@ public class EnergyMeterAnalytic implements Analytic<EnergyMeterEvent> {
                 .orElseThrow(() -> new IllegalStateException("Analytic calculation failed"));
     }
 
-    private Optional<AnalyticParams> calculate(List<EnergyMeterEvent> events, BinaryOperator<Float> accumulator) {
+    private Optional<AnalyticParams> calculate(List<EnergyMeterDto> events, BinaryOperator<Float> accumulator) {
         final List<Range<Instant>> onlineTimeRanges = getOnlineTimeRanges(events);
         return events.stream()
                 .filter(event -> isOnline(event, onlineTimeRanges))

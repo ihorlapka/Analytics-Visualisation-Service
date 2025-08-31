@@ -1,21 +1,35 @@
 package com.iot.devices.management.analytics_visualisation_service.mapping;
 
 import com.iot.devices.*;
+import com.iot.devices.management.analytics_visualisation_service.dto.*;
 import com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceStatus;
 import com.iot.devices.management.analytics_visualisation_service.persistence.enums.DoorState;
 import com.iot.devices.management.analytics_visualisation_service.persistence.enums.ThermostatMode;
-import com.iot.devices.management.analytics_visualisation_service.persistence.mongo.model.*;
 import lombok.experimental.UtilityClass;
+import org.apache.avro.specific.SpecificRecord;
 
 import java.util.UUID;
 
 import static java.util.Optional.ofNullable;
 
 @UtilityClass
-public class EventsMapper {
+public class RecordToDtoMapper {
 
-    public static DoorSensorEvent mapDoorSensor(DoorSensor ds) {
-        return new DoorSensorEvent(
+    public static TelemetryDto mapToDto(SpecificRecord record) {
+        return switch (record) {
+            case DoorSensor ds -> mapDoorSensor(ds);
+            case EnergyMeter em -> mapEnergyMeter(em);
+            case SmartLight sl -> mapSmartLight(sl);
+            case SmartPlug sp -> mapSmartPlug(sp);
+            case SoilMoistureSensor sms -> mapSoilMoistureSensor(sms);
+            case TemperatureSensor ts -> mapTemperatureSensor(ts);
+            case Thermostat t -> mapThermostat(t);
+            default -> throw new IllegalArgumentException("Unknown device type");
+        };
+    }
+
+    public static DoorSensorDto mapDoorSensor(DoorSensor ds) {
+        return new DoorSensorDto(
                 UUID.fromString(ds.getDeviceId()),
                 ofNullable(ds.getDoorState())
                         .map(s -> DoorState.valueOf(s.name()))
@@ -30,8 +44,8 @@ public class EventsMapper {
                 ds.getLastUpdated());
     }
 
-    public static ThermostatEvent mapThermostat(Thermostat t) {
-        return new ThermostatEvent(
+    public static ThermostatDto mapThermostat(Thermostat t) {
+        return new ThermostatDto(
                 UUID.fromString(t.getDeviceId()),
                 t.getCurrentTemperature(),
                 t.getTargetTemperature(),
@@ -46,8 +60,8 @@ public class EventsMapper {
                 t.getLastUpdated());
     }
 
-    public static SmartLightEvent mapSmartLight(SmartLight sl) {
-        return new SmartLightEvent(
+    public static SmartLightDto mapSmartLight(SmartLight sl) {
+        return new SmartLightDto(
                 UUID.fromString(sl.getDeviceId()),
                 sl.getIsOn(),
                 sl.getBrightness(),
@@ -63,8 +77,8 @@ public class EventsMapper {
                 sl.getLastUpdated());
     }
 
-    public static EnergyMeterEvent mapEnergyMeter(EnergyMeter em) {
-        return new EnergyMeterEvent(
+    public static EnergyMeterDto mapEnergyMeter(EnergyMeter em) {
+        return new EnergyMeterDto(
                 UUID.fromString(em.getDeviceId()),
                 em.getVoltage(),
                 em.getCurrent(),
@@ -77,8 +91,8 @@ public class EventsMapper {
                 em.getLastUpdated());
     }
 
-    public static SmartPlugEvent mapSmartPlug(SmartPlug em) {
-        return new SmartPlugEvent(
+    public static SmartPlugDto mapSmartPlug(SmartPlug em) {
+        return new SmartPlugDto(
                 UUID.fromString(em.getDeviceId()),
                 em.getIsOn(),
                 em.getVoltage(),
@@ -91,8 +105,8 @@ public class EventsMapper {
                 em.getLastUpdated());
     }
 
-    public static TemperatureSensorEvent mapTemperatureSensor(TemperatureSensor ts) {
-        return new TemperatureSensorEvent(
+    public static TemperatureSensorDto mapTemperatureSensor(TemperatureSensor ts) {
+        return new TemperatureSensorDto(
                 UUID.fromString(ts.getDeviceId()),
                 ts.getTemperature(),
                 ts.getHumidity(),
@@ -107,8 +121,8 @@ public class EventsMapper {
                 ts.getLastUpdated());
     }
 
-    public static SoilMoistureSensorEvent mapSoilMoistureSensor(SoilMoistureSensor sms) {
-        return new SoilMoistureSensorEvent(
+    public static SoilMoistureSensorDto mapSoilMoistureSensor(SoilMoistureSensor sms) {
+        return new SoilMoistureSensorDto(
                 UUID.fromString(sms.getDeviceId()),
                 sms.getMoisturePercentage(),
                 sms.getSoilTemperature(),
