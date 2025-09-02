@@ -1,5 +1,7 @@
 package com.iot.devices.management.analytics_visualisation_service.controllers;
 
+import com.iot.devices.management.analytics_visualisation_service.openapi.RouterFunctionOpenApi;
+import org.springframework.boot.autoconfigure.web.WebProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.function.server.RouterFunction;
@@ -12,9 +14,9 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.r
 public class TelemetriesRouterFunction {
 
     //TODO: add alerts endpoints!
-    //TODO: add Swagger
 
     @Bean
+    @RouterFunctionOpenApi
     public RouterFunction<ServerResponse> deviceRouterFunction(DevicesHandler deviceHandler) {
         return route()
                 .nest(path("/api/v1/devices/{deviceId}"), builder ->
@@ -28,5 +30,10 @@ public class TelemetriesRouterFunction {
                                 builder.GET("/devicesPerManufacturer", deviceHandler::getAmountOfDevicesPerManufacturer)
                                         .GET("/statuses", deviceHandler::getAmountOfDevicesWithStatus))
                         .build());
+    }
+
+    @Bean
+    public WebProperties.Resources resources() {
+        return new WebProperties.Resources();
     }
 }

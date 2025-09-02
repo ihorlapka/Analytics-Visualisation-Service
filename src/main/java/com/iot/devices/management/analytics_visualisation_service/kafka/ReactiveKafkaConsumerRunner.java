@@ -1,6 +1,7 @@
 package com.iot.devices.management.analytics_visualisation_service.kafka;
 
 import com.iot.devices.management.analytics_visualisation_service.stream.TelemetryStream;
+import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.PreDestroy;
 import lombok.extern.slf4j.Slf4j;
@@ -11,6 +12,7 @@ import org.springframework.kafka.support.serializer.DeserializationException;
 import org.springframework.stereotype.Component;
 import reactor.core.Disposable;
 import reactor.core.publisher.Mono;
+import reactor.kafka.receiver.MicrometerConsumerListener;
 import reactor.kafka.receiver.ReceiverOffset;
 import reactor.kafka.receiver.ReceiverOptions;
 import reactor.kafka.receiver.ReceiverRecord;
@@ -35,14 +37,15 @@ public class ReactiveKafkaConsumerRunner {
     private Disposable subscription;
 
     public ReactiveKafkaConsumerRunner(KafkaConsumerProperties consumerProperties, TelemetryStream telemetryStream,
-                                       AtomicBoolean kafkaConsumerStatusMonitor) {
+                                       AtomicBoolean kafkaConsumerStatusMonitor, MeterRegistry meterRegistry) {
         this.consumerProperties = consumerProperties;
         this.telemetryStream = telemetryStream;
         this.kafkaConsumerStatusMonitor = kafkaConsumerStatusMonitor;
-        this.consumerTemplate = new ReactiveKafkaConsumerTemplate<>(createReceiverOptions(consumerProperties));
+        this.consumerTemplate = new ReactiveKafkaConsumerTemplate<>(createReceiverOptions(consumerProperties, meterRegistry));
     }
 
-    private ReceiverOptions<String, SpecificRecord> createReceiverOptions(KafkaConsumerProperties consumerProperties) {
+    private ReceiverOptions<String, SpecificRecord> createReceiverOptions(KafkaConsumerProperties consumerProperties,
+                                                                          MeterRegistry meterRegistry) {
         final Properties properties = new Properties();
         properties.putAll(consumerProperties.getProperties());
         final ReceiverOptions<String, SpecificRecord> receiverOptions = ReceiverOptions.create(properties);
@@ -54,7 +57,8 @@ public class ReactiveKafkaConsumerRunner {
                 .addRevokeListener(partitions -> {
                     log.info("onPartitionsRevoked : {}", partitions);
                     kafkaConsumerStatusMonitor.set(false);
-                });
+                })
+                .consumerListener(new MicrometerConsumerListener(meterRegistry));
     }
 
     @PostConstruct

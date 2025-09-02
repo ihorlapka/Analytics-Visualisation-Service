@@ -9,6 +9,7 @@ import org.springframework.lang.Nullable;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.function.BinaryOperator;
@@ -53,13 +54,13 @@ public interface AnalyticProvider<T extends TelemetryDto, U extends Analytic> {
     }
 
     default <E extends TelemetryDto> List<Range<Instant>> getOnlineTimeRanges(List<E> events) {
+        final List<E> sorted = events.stream().sorted(Comparator.comparingLong(event -> event.getLastUpdated().toEpochMilli())).toList();
         final Set<DeviceStatus> notNeededStatuses = Set.of(OFFLINE, MAINTENANCE, ERROR);
         final List<Instant> startTimes = new ArrayList<>();
         final List<Instant> endTimes = new ArrayList<>();
         boolean isRangeStart = true;
-        for (E event : events) {
+        for (E event : sorted) {
             if (notNeededStatuses.contains(event.getStatus()) && !isRangeStart) {
-                endTimes.removeLast();
                 endTimes.add(event.getLastUpdated());
                 isRangeStart = true;
             }

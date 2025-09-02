@@ -7,6 +7,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
 import org.springframework.lang.Nullable;
+import org.springframework.stereotype.Component;
 
 import java.time.Instant;
 import java.util.List;
@@ -16,6 +17,7 @@ import java.util.function.BinaryOperator;
 import static com.iot.devices.management.analytics_visualisation_service.util.OptionalUtils.ifAllPresentGet;
 
 @Getter
+@Component
 @RequiredArgsConstructor(staticName = "of")
 public class TemperatureSensorAnalyticProvider implements AnalyticProvider<TemperatureSensorDto, TemperatureSensorAnalytic> {
 
