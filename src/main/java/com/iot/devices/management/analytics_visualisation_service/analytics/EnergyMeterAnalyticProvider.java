@@ -53,7 +53,7 @@ public class EnergyMeterAnalyticProvider implements AnalyticProvider<EnergyMeter
         return EnergyMeterAnalytic.of(
                 avg.getVoltage(), avg.getCurrent(), avg.getPower(), avg.getEnergyConsumed(),
                 max.getVoltage(), max.getCurrent(), max.getPower(), max.getEnergyConsumed(),
-                min.getVoltage(), min.getCurrent(), min.getPower(), max.getEnergyConsumed()
+                min.getVoltage(), min.getCurrent(), min.getPower(), min.getEnergyConsumed()
         );
     }
 

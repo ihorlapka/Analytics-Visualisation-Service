@@ -1,9 +1,13 @@
 package com.iot.devices.management.analytics_visualisation_service.analytics.model;
 
-import lombok.Value;
+import lombok.*;
 
-@Value(staticConstructor = "of")
-public class EnergyMeterAnalytic implements Analytic {
+@Getter
+@ToString
+@AllArgsConstructor(staticName = "of")
+@NoArgsConstructor
+@EqualsAndHashCode
+public final class EnergyMeterAnalytic implements Analytic {
     Float avgVoltage;
     Float avgCurrent;
     Float avgPower;

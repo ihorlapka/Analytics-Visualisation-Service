@@ -3,8 +3,11 @@ package com.iot.devices.management.analytics_visualisation_service.controllers;
 import com.iot.devices.management.analytics_visualisation_service.analytics.AnalyticRegistry;
 import com.iot.devices.management.analytics_visualisation_service.mapping.EventToDtoMapper;
 import com.iot.devices.management.analytics_visualisation_service.dto.TelemetryDto;
+import com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceStatus;
 import com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceType;
 import com.iot.devices.management.analytics_visualisation_service.persistence.mongo.services.TelemetryService;
+import com.iot.devices.management.analytics_visualisation_service.persistence.r2dbc.model.Device;
+import com.iot.devices.management.analytics_visualisation_service.persistence.r2dbc.repo.DeviceRepository;
 import com.iot.devices.management.analytics_visualisation_service.stream.TelemetryStream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -19,7 +22,9 @@ import reactor.util.function.Tuple4;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
+import static java.util.stream.Collectors.counting;
 import static org.springframework.http.MediaType.TEXT_EVENT_STREAM;
 import static reactor.core.publisher.Flux.fromIterable;
 
@@ -32,10 +37,12 @@ public class DevicesHandler {
     private static final String RATE = "rate";
     private static final String FROM = "from";
     private static final String TO = "to";
+    private static final String STATUS = "status";
 
     private final TelemetryService telemetryService;
     private final AnalyticRegistry analyticRegistry;
     private final TelemetryStream telemetryStream;
+    private final DeviceRepository deviceRepository;
 
     public Mono<ServerResponse> getHistory(ServerRequest request) {
         return Mono.zip(getIdMono(request), getInstantMono(request, FROM), getInstantMono(request, TO), getDeviceTypeMono(request))
@@ -63,6 +70,24 @@ public class DevicesHandler {
                 .flatMap( tuple -> getTelemetriesMonoList(tuple)
                         .map(telemetries -> analyticRegistry.getProvider(tuple.getT4()).calculate(telemetries)))
                 .flatMap(analytic -> ServerResponse.ok().body(BodyInserters.fromValue(analytic)));
+    }
+
+    public Mono<ServerResponse> getAmountOfDevicesPerManufacturer(ServerRequest request) {
+        return deviceRepository.findAll().collectList()
+                .map(devices -> devices.stream()
+                        .collect(Collectors.groupingBy(Device::getManufacturer, counting())))
+                .flatMap(result -> ServerResponse.ok().body(BodyInserters.fromValue(result)));
+    }
+
+    public Mono<ServerResponse> getAmountOfDevicesWithStatus(ServerRequest request) {
+        return deviceRepository.findAll().collectList()
+                .map(devices -> devices.stream()
+                        .filter(device -> request.queryParam(STATUS)
+                                .map(DeviceStatus::valueOf)
+                                .map(status -> status.equals(device.getStatus()))
+                                .orElseThrow(() -> new IllegalArgumentException("param 'status' is not present in request")))
+                        .collect(Collectors.groupingBy(Device::getManufacturer, counting())))
+                .flatMap(result -> ServerResponse.ok().body(BodyInserters.fromValue(result)));
     }
 
     private Mono<Instant> getInstantMono(ServerRequest request, String period) {
@@ -94,6 +119,7 @@ public class DevicesHandler {
     private Flux<TelemetryDto> combineHistoryAndRealTimeData(Tuple4<UUID, Instant, Instant, DeviceType> tuple) {
         return getTelemetriesMonoList(tuple)
                 .flatMapMany(history -> fromIterable(history)
-                        .concatWith(telemetryStream.getStream(tuple.getT4(), tuple.getT1())));
+                        .concatWith(telemetryStream.getStream(tuple.getT4(), tuple.getT1())))
+                .distinct();
     }
 }

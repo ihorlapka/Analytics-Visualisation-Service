@@ -22,6 +22,11 @@ public class TelemetriesRouterFunction {
                                 .GET("/realTime", deviceHandler::getRealTimeTelemetry)
                                 .GET("/historyWithRealTime", deviceHandler::getHistoryWithRealTimeData)
                                 .GET("/analytics", deviceHandler::getAnalytics))
-                .build();
+                .build()
+                .and(route()
+                        .nest(path("api/v1"), builder ->
+                                builder.GET("/devicesPerManufacturer", deviceHandler::getAmountOfDevicesPerManufacturer)
+                                        .GET("/statuses", deviceHandler::getAmountOfDevicesWithStatus))
+                        .build());
     }
 }

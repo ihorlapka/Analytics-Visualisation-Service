@@ -1,9 +1,12 @@
 package com.iot.devices.management.analytics_visualisation_service.analytics.model;
 
-import lombok.Value;
+import lombok.*;
 
-@Value(staticConstructor = "of")
-public class SmartLightAnalytic implements Analytic {
+@Getter
+@AllArgsConstructor(staticName = "of")
+@NoArgsConstructor
+@EqualsAndHashCode
+public final class SmartLightAnalytic implements Analytic {
     Float avgBrightness;
     Float avgPowerConsumption;
 

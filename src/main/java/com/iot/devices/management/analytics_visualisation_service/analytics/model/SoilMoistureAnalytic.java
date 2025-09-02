@@ -1,9 +1,12 @@
 package com.iot.devices.management.analytics_visualisation_service.analytics.model;
 
-import lombok.Value;
+import lombok.*;
 
-@Value(staticConstructor = "of")
-public class SoilMoistureAnalytic implements Analytic {
+@Getter
+@AllArgsConstructor(staticName = "of")
+@NoArgsConstructor
+@EqualsAndHashCode
+public final class SoilMoistureAnalytic implements Analytic {
 
     Float avgMoisturePercentage;
     Float avgSoilTemperature;
