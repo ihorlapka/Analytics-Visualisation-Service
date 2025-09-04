@@ -475,12 +475,148 @@ import static org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE;
                 beanClass = DevicesHandler.class,
                 beanMethod = "getAmountOfDevicesPerManufacturer",
                 operation = @Operation(operationId = "getAmountOfDevicesPerManufacturer",
-                        summary = "Get the amount of devices per manufacturer")),
+                        summary = "Get the amount of devices per manufacturer",
+                        responses = {
+                                @ApiResponse(
+                                        responseCode = "200",
+                                        description = "Returns amount of devices per manufacturer",
+                                        content = @Content(
+                                                mediaType = APPLICATION_JSON_VALUE,
+                                                examples = @ExampleObject(
+                                                        name = "AmountOfDevicesPerManufacturer",
+                                                        summary = "The amount of devices per manufacturer",
+                                                        value = """
+                                                                {
+                                                                    "BOSCH": 8,
+                                                                    "SIEMENS": 8,
+                                                                    "CISCO_SYSTEMS": 12,
+                                                                    "SAMSUNG": 10,
+                                                                    "FITBIT": 8,
+                                                                    "AMAZON": 13,
+                                                                    "PHILIPS_HUE": 9,
+                                                                    "HONEYWELL": 8,
+                                                                    "SCHNEIDER_ELECTRIC": 8,
+                                                                    "TEXAS_INSTRUMENTS": 6
+                                                                }
+                                                                """
+                                                )
+                                        )
+                                ),
+                                @ApiResponse(
+                                        responseCode = "400",
+                                        description = "Request is invalid",
+                                        content = @Content(
+                                                mediaType = APPLICATION_JSON_VALUE,
+                                                schema = @Schema(implementation = String.class),
+                                                examples = @ExampleObject(
+                                                        name = "Bad request",
+                                                        summary = "Request is invalid",
+                                                        value = """
+                                                                {
+                                                                "timestamp":"2025-09-04T13:22:11.864+00:00",
+                                                                "path":"/api/v1/devicesPerManufacturer",
+                                                                "status":400,
+                                                                "error":"Client Error",
+                                                                "requestId":"585c9d89",
+                                                                "message":"Some params in request are not set properly!"
+                                                                }
+                                                                """
+                                                )
+                                        )
+                                ),
+                                @ApiResponse(
+                                        responseCode = "500",
+                                        description = "Internal Server Error",
+                                        content = @Content(
+                                                mediaType = APPLICATION_JSON_VALUE,
+                                                schema = @Schema(implementation = String.class),
+                                                examples = @ExampleObject(
+                                                        name = "Server error",
+                                                        summary = "Server is down",
+                                                        value = """
+                                                                {
+                                                                "timestamp":"2025-09-04T13:19:57.120+00:00",
+                                                                "path":"/api/v1/devicesPerManufacturer",
+                                                                "status":500,
+                                                                "error":"Internal Server Error",
+                                                                "requestId":"5f60ed6"
+                                                                }
+                                                                """
+                                                )
+                                        )
+                                )
+                        }
+                )
+        ),
         @RouterOperation(path = "/api/v1/statuses",
                 beanClass = DevicesHandler.class,
                 beanMethod = "getAmountOfDevicesWithStatus",
                 operation = @Operation(operationId = "getAmountOfDevicesWithStatus",
-                        summary = "Get the number of devices with each status"))
+                        summary = "Get the number of devices with desired status",
+                        responses = {
+                                @ApiResponse(
+                                        responseCode = "200",
+                                        description = "Returns amount of devices per manufacturer with desired status",
+                                        content = @Content(
+                                                mediaType = APPLICATION_JSON_VALUE,
+                                                examples = @ExampleObject(
+                                                        name = "AmountOfDevicesWithStatus",
+                                                        summary = "The number of devices with desired status",
+                                                        value = """
+                                                                {
+                                                                    "CISCO_SYSTEMS": 1,
+                                                                    "PHILIPS_HUE": 1
+                                                                }
+                                                                """
+                                                )
+                                        )
+                                ),
+                                @ApiResponse(
+                                        responseCode = "400",
+                                        description = "Request is invalid",
+                                        content = @Content(
+                                                mediaType = APPLICATION_JSON_VALUE,
+                                                schema = @Schema(implementation = String.class),
+                                                examples = @ExampleObject(
+                                                        name = "Bad request",
+                                                        summary = "Request is invalid",
+                                                        value = """
+                                                                {
+                                                                "timestamp":"2025-09-04T13:22:11.864+00:00",
+                                                                "path":"/api/v1/statuses",
+                                                                "status":400,
+                                                                "error":"Client Error",
+                                                                "requestId":"585c9d89",
+                                                                "message":"Some params in request are not set properly!"
+                                                                }
+                                                                """
+                                                )
+                                        )
+                                ),
+                                @ApiResponse(
+                                        responseCode = "500",
+                                        description = "Internal Server Error",
+                                        content = @Content(
+                                                mediaType = APPLICATION_JSON_VALUE,
+                                                schema = @Schema(implementation = String.class),
+                                                examples = @ExampleObject(
+                                                        name = "Server error",
+                                                        summary = "Server is down",
+                                                        value = """
+                                                                {
+                                                                "timestamp":"2025-09-04T13:19:57.120+00:00",
+                                                                "path":"/api/v1/statuses",
+                                                                "status":500,
+                                                                "error":"Internal Server Error",
+                                                                "requestId":"5f60ed6"
+                                                                }
+                                                                """
+                                                )
+                                        )
+                                )
+                        }
+                )
+        )
 })
 public @interface RouterFunctionOpenApi {
 
