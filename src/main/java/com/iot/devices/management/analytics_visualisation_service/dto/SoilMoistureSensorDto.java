@@ -1,10 +1,12 @@
 package com.iot.devices.management.analytics_visualisation_service.dto;
 
 import com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceStatus;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.Instant;
 import java.util.UUID;
 
+@Schema(name = "SoilMoistureSensorTelemetry", description = "Soil Moisture Sensor Telemetry")
 public record SoilMoistureSensorDto(
         UUID deviceId,
         Float moisturePercentage,

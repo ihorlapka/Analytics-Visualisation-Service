@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.reactive.function.server.RouterFunction;
 import org.springframework.web.reactive.function.server.ServerResponse;
 
+import static org.springframework.web.reactive.function.server.RequestPredicates.GET;
 import static org.springframework.web.reactive.function.server.RequestPredicates.path;
 import static org.springframework.web.reactive.function.server.RouterFunctions.route;
 
@@ -29,7 +30,9 @@ public class TelemetriesRouterFunction {
                         .nest(path("api/v1"), builder ->
                                 builder.GET("/devicesPerManufacturer", deviceHandler::getAmountOfDevicesPerManufacturer)
                                         .GET("/statuses", deviceHandler::getAmountOfDevicesWithStatus))
-                        .build());
+                        .build())
+                .and(route(GET("/.well-known/appspecific/com.chrome.devtools.json"), //not sure where it is coming from (just for skipping errors)
+                        request -> ServerResponse.notFound().build()));
     }
 
     @Bean

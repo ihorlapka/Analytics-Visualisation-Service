@@ -1,5 +1,6 @@
 package com.iot.devices.management.analytics_visualisation_service.controllers;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.web.WebProperties;
 import org.springframework.boot.autoconfigure.web.reactive.error.AbstractErrorWebExceptionHandler;
 import org.springframework.boot.web.error.ErrorAttributeOptions;
@@ -12,6 +13,7 @@ import org.springframework.http.codec.ServerCodecConfigurer;
 import org.springframework.stereotype.Component;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.server.*;
+import org.springframework.web.reactive.resource.NoResourceFoundException;
 import reactor.core.publisher.Mono;
 
 import java.time.format.DateTimeParseException;
@@ -20,11 +22,14 @@ import java.util.NoSuchElementException;
 
 import static org.springframework.http.HttpStatus.INTERNAL_SERVER_ERROR;
 
+@Slf4j
 @Component
 @Order(-2)
 public class GlobalErrorWebExceptionHandler extends AbstractErrorWebExceptionHandler {
 
     public static final String MESSAGE = "message";
+    public static final String STATUS = "status";
+    public static final String ERROR = "error";
 
     public GlobalErrorWebExceptionHandler(ErrorAttributes errorAttributes,
                                           WebProperties.Resources resources,
@@ -45,11 +50,20 @@ public class GlobalErrorWebExceptionHandler extends AbstractErrorWebExceptionHan
         Throwable error = getError(request);
 
         if (isClientError(error)) {
+            errorPropertiesMap.put(STATUS, "400");
+            errorPropertiesMap.put(ERROR, "Client Error");
             errorPropertiesMap.put(MESSAGE, "Some params in request are not set properly!");
             return ServerResponse.status(HttpStatus.BAD_REQUEST)
                     .contentType(MediaType.APPLICATION_JSON)
                     .body(BodyInserters.fromValue(errorPropertiesMap));
         }
+        if (error instanceof NoResourceFoundException) {
+            log.info("Ignoring missing resource: {}", request);
+            return ServerResponse.status(HttpStatus.NOT_FOUND)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .build();
+        }
+        errorPropertiesMap.put(MESSAGE, error.getMessage());
         return ServerResponse.status(INTERNAL_SERVER_ERROR)
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(BodyInserters.fromValue(errorPropertiesMap));

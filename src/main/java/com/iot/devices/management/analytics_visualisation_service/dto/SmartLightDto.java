@@ -1,11 +1,12 @@
 package com.iot.devices.management.analytics_visualisation_service.dto;
 
 import com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceStatus;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.Instant;
 import java.util.UUID;
 
-
+@Schema(name = "SmartLightTelemetry", description = "Smart Light Telemetry")
 public record SmartLightDto(
         UUID deviceId,
         Boolean isOn,

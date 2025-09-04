@@ -2,10 +2,12 @@ package com.iot.devices.management.analytics_visualisation_service.dto;
 
 import com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceStatus;
 import com.iot.devices.management.analytics_visualisation_service.persistence.enums.ThermostatMode;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.Instant;
 import java.util.UUID;
 
+@Schema(name = "ThermostatTelemetry", description = "Thermostat Telemetry")
 public record ThermostatDto(
         UUID deviceId,
         Float currentTemperature,

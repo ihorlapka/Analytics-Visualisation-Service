@@ -1,7 +1,8 @@
 server:
-  base-path: /avs
   port: 8083
 spring:
+  webflux:
+    base-path: /avs
   application:
     name: analytics-visualisation-service
   data:

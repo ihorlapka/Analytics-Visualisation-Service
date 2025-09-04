@@ -1,11 +1,13 @@
 package com.iot.devices.management.analytics_visualisation_service.dto;
 
 import com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceStatus;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.Instant;
 import java.util.UUID;
 
 
+@Schema(name = "EnergyMeterTelemetry", description = "Energy Meter Telemetry")
 public record EnergyMeterDto(
         UUID deviceId,
         Float voltage,

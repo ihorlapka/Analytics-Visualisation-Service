@@ -1,10 +1,12 @@
 package com.iot.devices.management.analytics_visualisation_service.dto;
 
 import com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceStatus;
+import io.swagger.v3.oas.annotations.media.Schema;
 
 import java.time.Instant;
 import java.util.UUID;
 
+@Schema(name = "SmartPlugTelemetry", description = "Smart Plug Telemetry")
 public record SmartPlugDto(UUID deviceId,
                            Boolean isOn,
                            Float voltage,

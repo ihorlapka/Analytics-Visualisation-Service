@@ -1,5 +1,6 @@
 package com.iot.devices.management.analytics_visualisation_service.analytics.model;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.*;
 
 @Getter
@@ -7,6 +8,7 @@ import lombok.*;
 @AllArgsConstructor(staticName = "of")
 @NoArgsConstructor
 @EqualsAndHashCode
+@Schema(name = "EnergyMeterAnalytic", description = "Energy Meter Analytic")
 public final class EnergyMeterAnalytic implements Analytic {
     Float avgVoltage;
     Float avgCurrent;

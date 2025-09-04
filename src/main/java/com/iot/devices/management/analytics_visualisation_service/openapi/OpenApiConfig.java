@@ -11,12 +11,12 @@ import io.swagger.v3.oas.annotations.servers.Server;
                         name = "Ihor Lapka",
                         email = "lapkaihor@gmail.com"
                 ),
-                description = "Open Api documentation for Registry Service",
+                description = "Open Api documentation for Analytic & Visualisation Service",
                 version = "1.0.0"
         ),
         servers = @Server(
                 description = "local environment",
-                url = "localhost:8080/iot-registry"
+                url = "localhost:8080/avs"
         )
 )
 public class OpenApiConfig {
