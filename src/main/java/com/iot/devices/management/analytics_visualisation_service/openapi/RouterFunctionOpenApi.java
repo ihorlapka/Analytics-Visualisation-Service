@@ -627,6 +627,4 @@ public @interface RouterFunctionOpenApi {
     String TEMPERATURE_SENSOR = "TemperatureSensor";
     String THERMOSTAT = "Thermostat";
     String SOIL_MOISTURE_SENSOR = "SoilMoistureSensor";
-
-    //TODO: refactor!
 }
