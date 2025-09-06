@@ -1,4 +1,4 @@
-package com.iot.devices.management.analytics_visualisation_service.controllers;
+package com.iot.devices.management.analytics_visualisation_service.rest;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.web.WebProperties;

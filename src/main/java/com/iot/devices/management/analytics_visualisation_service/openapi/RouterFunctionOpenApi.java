@@ -1,7 +1,7 @@
 package com.iot.devices.management.analytics_visualisation_service.openapi;
 
 import com.iot.devices.management.analytics_visualisation_service.analytics.model.*;
-import com.iot.devices.management.analytics_visualisation_service.controllers.DevicesHandler;
+import com.iot.devices.management.analytics_visualisation_service.rest.DevicesHandler;
 import com.iot.devices.management.analytics_visualisation_service.dto.*;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;

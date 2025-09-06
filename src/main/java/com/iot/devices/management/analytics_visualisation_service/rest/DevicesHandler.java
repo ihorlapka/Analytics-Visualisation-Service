@@ -1,4 +1,4 @@
-package com.iot.devices.management.analytics_visualisation_service.controllers;
+package com.iot.devices.management.analytics_visualisation_service.rest;
 
 import com.iot.devices.management.analytics_visualisation_service.analytics.AnalyticRegistry;
 import com.iot.devices.management.analytics_visualisation_service.mapping.EventToDtoMapper;

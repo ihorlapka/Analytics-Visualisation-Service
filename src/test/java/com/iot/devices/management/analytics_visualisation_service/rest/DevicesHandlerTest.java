@@ -1,4 +1,4 @@
-package com.iot.devices.management.analytics_visualisation_service.controllers;
+package com.iot.devices.management.analytics_visualisation_service.rest;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
@@ -37,7 +37,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
-import static com.iot.devices.management.analytics_visualisation_service.controllers.GlobalErrorWebExceptionHandler.MESSAGE;
+import static com.iot.devices.management.analytics_visualisation_service.rest.GlobalErrorWebExceptionHandler.MESSAGE;
 import static com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceManufacturer.*;
 import static com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceStatus.*;
 import static com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceType.*;

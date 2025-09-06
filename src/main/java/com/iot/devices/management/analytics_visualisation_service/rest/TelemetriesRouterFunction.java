@@ -1,4 +1,4 @@
-package com.iot.devices.management.analytics_visualisation_service.controllers;
+package com.iot.devices.management.analytics_visualisation_service.rest;
 
 import com.iot.devices.management.analytics_visualisation_service.openapi.RouterFunctionOpenApi;
 import org.springframework.boot.autoconfigure.web.WebProperties;
