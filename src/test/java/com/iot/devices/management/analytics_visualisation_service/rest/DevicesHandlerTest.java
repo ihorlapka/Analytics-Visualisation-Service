@@ -5,8 +5,7 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.iot.devices.management.analytics_visualisation_service.analytics.*;
 import com.iot.devices.management.analytics_visualisation_service.analytics.model.EnergyMeterAnalytic;
 import com.iot.devices.management.analytics_visualisation_service.dto.EnergyMeterDto;
-import com.iot.devices.management.analytics_visualisation_service.persistence.mongo.model.EnergyMeterEvent;
-import com.iot.devices.management.analytics_visualisation_service.persistence.mongo.services.TelemetryService;
+import com.iot.devices.management.analytics_visualisation_service.persistence.mongo.cache.TelemetryCachingRepository;
 import com.iot.devices.management.analytics_visualisation_service.persistence.r2dbc.model.Device;
 import com.iot.devices.management.analytics_visualisation_service.persistence.r2dbc.repo.DeviceRepository;
 import com.iot.devices.management.analytics_visualisation_service.stream.TelemetryStream;
@@ -26,6 +25,7 @@ import org.springframework.test.web.reactive.server.WebTestClient;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
 import java.io.IOException;
@@ -50,6 +50,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.http.MediaType.TEXT_EVENT_STREAM;
+import static reactor.core.publisher.Flux.fromIterable;
 
 @WebFluxTest
 @ExtendWith(SpringExtension.class)
@@ -71,7 +72,7 @@ class DevicesHandlerTest {
     @MockitoBean
     TelemetryStream telemetryStream;
     @MockitoBean
-    TelemetryService telemetryService;
+    TelemetryCachingRepository telemetryCachingRepository;
     @MockitoBean
     DeviceRepository deviceRepository;
 
@@ -85,7 +86,7 @@ class DevicesHandlerTest {
 
     @AfterEach
     void tearDown() {
-        verifyNoMoreInteractions(telemetryService, telemetryStream, analyticRegistry, deviceRepository);
+        verifyNoMoreInteractions(telemetryCachingRepository, telemetryStream, analyticRegistry, deviceRepository);
     }
 
     @Test
@@ -93,10 +94,7 @@ class DevicesHandlerTest {
         EnergyMeterDto energyMeterDto = new EnergyMeterDto(UUID.randomUUID(), 220f, 1.1f, 340f,
                 3000f, ONLINE, "asd", now().truncatedTo(MILLIS));
 
-        EnergyMeterEvent event = mapToEvent(energyMeterDto);
-
-        when(telemetryService.findByDeviceIdAndLastUpdatedBetween(eq(energyMeterDto.deviceId()), any(Instant.class), any(Instant.class), eq(ENERGY_METER)))
-                .thenReturn(Flux.fromIterable(List.of(event)));
+        doReturn(Mono.just(energyMeterDto)).when(telemetryCachingRepository).getFromCacheOrDb(eq(energyMeterDto.deviceId()), any(Instant.class), any(Instant.class), eq(ENERGY_METER));
 
         webTestClient.get()
                 .uri("/api/v1/devices/" + energyMeterDto.getDeviceId() + "/history")
@@ -114,21 +112,21 @@ class DevicesHandlerTest {
         EnergyMeterDto energyMeterDto = new EnergyMeterDto(UUID.randomUUID(), 220f, 1.1f, 340f,
                 3000f, ONLINE, "asd", now().truncatedTo(MILLIS));
 
-        when(telemetryService.findByDeviceIdAndLastUpdatedBetween(eq(energyMeterDto.deviceId()), any(Instant.class), any(Instant.class), eq(ENERGY_METER)))
+        when(telemetryCachingRepository.getFromCacheOrDb(eq(energyMeterDto.deviceId()), any(Instant.class), any(Instant.class), eq(ENERGY_METER)))
                 .thenThrow(DataAccessResourceFailureException.class);
 
         webTestClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/api/v1/devices/{deviceId}/history")
-                        .queryParam("from", "2025-01-01T00:00:00Z")
-                        .queryParam("to", "2025-08-31T23:59:59Z")
+                        .queryParam("from", "2025-01-01T00:00")
+                        .queryParam("to", "2025-08-31T23:59:59")
                         .queryParam("deviceType", ENERGY_METER.getId())
                         .build(energyMeterDto.deviceId()))
                 .accept(APPLICATION_JSON)
                 .exchange()
                 .expectStatus().is5xxServerError();
 
-        verify(telemetryService).findByDeviceIdAndLastUpdatedBetween(eq(energyMeterDto.deviceId()), any(Instant.class), any(Instant.class), eq(ENERGY_METER));
+        verify(telemetryCachingRepository).getFromCacheOrDb(eq(energyMeterDto.deviceId()), any(Instant.class), any(Instant.class), eq(ENERGY_METER));
     }
 
     @Test
@@ -140,17 +138,13 @@ class DevicesHandlerTest {
         EnergyMeterDto energyMeterDto2 = new EnergyMeterDto(deviceId, 223f, 1.1f, 340f,
                 3049f, ONLINE, "asd", now().plus(5, SECONDS).truncatedTo(MILLIS));
 
-        EnergyMeterEvent event1 = mapToEvent(energyMeterDto1);
-        EnergyMeterEvent event2 = mapToEvent(energyMeterDto2);
-
-        when(telemetryService.findByDeviceIdAndLastUpdatedBetween(eq(deviceId), any(Instant.class), any(Instant.class), eq(ENERGY_METER)))
-                .thenReturn(Flux.fromIterable(List.of(event1, event2)));
+        doReturn(Mono.just(List.of(energyMeterDto1, energyMeterDto2))).when(telemetryCachingRepository).getFromCacheOrDb(eq(deviceId), any(Instant.class), any(Instant.class), eq(ENERGY_METER));
 
         webTestClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/api/v1/devices/{deviceId}/history")
-                        .queryParam("from", "2025-01-01T00:00:00Z")
-                        .queryParam("to", "2025-08-31T23:59:59Z")
+                        .queryParam("from", "2025-01-01T00:00")
+                        .queryParam("to", "2025-08-31T23:59")
                         .queryParam("deviceType", ENERGY_METER.getId())
                         .build(deviceId))
                 .accept(APPLICATION_JSON)
@@ -168,7 +162,7 @@ class DevicesHandlerTest {
                     }
                 });
 
-        verify(telemetryService).findByDeviceIdAndLastUpdatedBetween(eq(deviceId), any(Instant.class), any(Instant.class), eq(ENERGY_METER));
+        verify(telemetryCachingRepository).getFromCacheOrDb(eq(deviceId), any(Instant.class), any(Instant.class), eq(ENERGY_METER));
     }
 
     @Test
@@ -201,7 +195,7 @@ class DevicesHandlerTest {
         webTestClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/api/v1/devices/{deviceId}/realTime")
-                        .queryParam("from", "2025-01-01T00:00:00Z")
+                        .queryParam("from", "2025-01-01T00:00:00")
                         .queryParam("deviceType", ENERGY_METER.getId())
                         .queryParam("rate", 10)
                         .build(energyMeterDto.deviceId()))
@@ -221,12 +215,12 @@ class DevicesHandlerTest {
         EnergyMeterDto energyMeterDto2 = new EnergyMeterDto(deviceId, 223f, 1.1f, 340f,
                 3049f, ONLINE, "asd", now().plus(5, SECONDS).truncatedTo(MILLIS));
 
-        when(telemetryStream.getStream(ENERGY_METER, deviceId)).thenReturn(Flux.fromIterable(List.of(energyMeterDto1, energyMeterDto2)));
+        when(telemetryStream.getStream(ENERGY_METER, deviceId)).thenReturn(fromIterable(List.of(energyMeterDto1, energyMeterDto2)));
 
         Flux<EnergyMeterDto> flux = webTestClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/api/v1/devices/{deviceId}/realTime")
-                        .queryParam("from", "2025-01-01T00:00:00Z")
+                        .queryParam("from", "2025-01-01T00:00:00")
                         .queryParam("deviceType", ENERGY_METER.getId())
                         .queryParam("rate", 10)
                         .build(deviceId))
@@ -256,19 +250,15 @@ class DevicesHandlerTest {
         EnergyMeterDto energyMeterDto3 = new EnergyMeterDto(deviceId, null, null, 340f,
                 null, ONLINE, "asd", now().truncatedTo(MILLIS));
 
-        EnergyMeterEvent event1 = mapToEvent(energyMeterDto1);
-        EnergyMeterEvent event2 = mapToEvent(energyMeterDto2);
-
-        when(telemetryService.findByDeviceIdAndLastUpdatedBetween(eq(deviceId), any(Instant.class), any(Instant.class), eq(ENERGY_METER)))
-                .thenReturn(Flux.fromIterable(List.of(event1, event2)));
+        doReturn(Mono.just(List.of(energyMeterDto1, energyMeterDto2))).when(telemetryCachingRepository).getFromCacheOrDb(eq(deviceId), any(Instant.class), any(Instant.class), eq(ENERGY_METER));
 
         when(telemetryStream.getStream(ENERGY_METER, deviceId))
-                .thenReturn(Flux.fromIterable(List.of(energyMeterDto3, energyMeterDto2)));
+                .thenReturn(fromIterable(List.of(energyMeterDto3, energyMeterDto2)));
 
         Flux<EnergyMeterDto> flux = webTestClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/api/v1/devices/{deviceId}/historyWithRealTime")
-                        .queryParam("from", "2025-01-01T00:00:00Z")
+                        .queryParam("from", "2025-01-01T00:00:00")
                         .queryParam("deviceType", ENERGY_METER.getId())
                         .build(deviceId))
                 .accept(TEXT_EVENT_STREAM)
@@ -283,7 +273,7 @@ class DevicesHandlerTest {
                 .verify();
 
         verify(telemetryStream).getStream(ENERGY_METER, deviceId);
-        verify(telemetryService).findByDeviceIdAndLastUpdatedBetween(eq(deviceId), any(Instant.class), any(Instant.class), eq(ENERGY_METER));
+        verify(telemetryCachingRepository).getFromCacheOrDb(eq(deviceId), any(Instant.class), any(Instant.class), eq(ENERGY_METER));
     }
 
     @Test
@@ -295,11 +285,7 @@ class DevicesHandlerTest {
         EnergyMeterDto energyMeterDto2 = new EnergyMeterDto(deviceId, 224f, 1.2f, 360f,
                 4000f, ONLINE, "asd", now().plus(5, SECONDS).truncatedTo(MILLIS));
 
-        EnergyMeterEvent event1 = mapToEvent(energyMeterDto1);
-        EnergyMeterEvent event2 = mapToEvent(energyMeterDto2);
-
-        when(telemetryService.findByDeviceIdAndLastUpdatedBetween(eq(deviceId), any(Instant.class), any(Instant.class), eq(ENERGY_METER)))
-                .thenReturn(Flux.fromIterable(List.of(event1, event2)));
+        doReturn(Mono.just(List.of(energyMeterDto1, energyMeterDto2))).when(telemetryCachingRepository).getFromCacheOrDb(eq(deviceId), any(Instant.class), any(Instant.class), eq(ENERGY_METER));
 
         AnalyticProvider<EnergyMeterDto, EnergyMeterAnalytic> energyMeterAnalyticProvider = EnergyMeterAnalyticProvider.of();
         doReturn(energyMeterAnalyticProvider).when(analyticRegistry).getProvider(ENERGY_METER);
@@ -307,8 +293,8 @@ class DevicesHandlerTest {
         webTestClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/api/v1/devices/{deviceId}/analytics")
-                        .queryParam("from", "2025-01-01T00:00:00Z")
-                        .queryParam("to", "2025-08-31T23:59:59Z")
+                        .queryParam("from", "2025-01-01T00:00:00")
+                        .queryParam("to", "2025-08-31T23:59:59")
                         .queryParam("deviceType", ENERGY_METER.getId())
                         .build(deviceId))
                 .accept(APPLICATION_JSON)
@@ -329,7 +315,7 @@ class DevicesHandlerTest {
                     }
                 });
 
-        verify(telemetryService).findByDeviceIdAndLastUpdatedBetween(eq(deviceId), any(Instant.class), any(Instant.class), eq(ENERGY_METER));
+        verify(telemetryCachingRepository).getFromCacheOrDb(eq(deviceId), any(Instant.class), any(Instant.class), eq(ENERGY_METER));
         verify(analyticRegistry).getProvider(ENERGY_METER);
     }
 
@@ -438,18 +424,5 @@ class DevicesHandlerTest {
                 });
 
         verify(deviceRepository).findAll();
-    }
-
-    private EnergyMeterEvent mapToEvent(EnergyMeterDto energyMeterDto) {
-        return EnergyMeterEvent.builder()
-                .deviceId(energyMeterDto.deviceId())
-                .voltage(energyMeterDto.voltage())
-                .current(energyMeterDto.current())
-                .power(energyMeterDto.power())
-                .energyConsumed(energyMeterDto.energyConsumed())
-                .firmwareVersion(energyMeterDto.firmwareVersion())
-                .status(ONLINE)
-                .lastUpdated(energyMeterDto.lastUpdated())
-                .build();
     }
 }

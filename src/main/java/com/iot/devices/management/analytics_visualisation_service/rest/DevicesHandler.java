@@ -1,11 +1,10 @@
 package com.iot.devices.management.analytics_visualisation_service.rest;
 
 import com.iot.devices.management.analytics_visualisation_service.analytics.AnalyticRegistry;
-import com.iot.devices.management.analytics_visualisation_service.mapping.EventToDtoMapper;
 import com.iot.devices.management.analytics_visualisation_service.dto.TelemetryDto;
 import com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceStatus;
 import com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceType;
-import com.iot.devices.management.analytics_visualisation_service.persistence.mongo.services.TelemetryService;
+import com.iot.devices.management.analytics_visualisation_service.persistence.mongo.cache.TelemetryCachingRepository;
 import com.iot.devices.management.analytics_visualisation_service.persistence.r2dbc.model.Device;
 import com.iot.devices.management.analytics_visualisation_service.persistence.r2dbc.repo.DeviceRepository;
 import com.iot.devices.management.analytics_visualisation_service.stream.TelemetryStream;
@@ -20,6 +19,8 @@ import reactor.util.function.Tuple3;
 import reactor.util.function.Tuple4;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -39,10 +40,10 @@ public class DevicesHandler {
     private static final String TO = "to";
     private static final String STATUS = "status";
 
-    private final TelemetryService telemetryService;
     private final AnalyticRegistry analyticRegistry;
     private final TelemetryStream telemetryStream;
     private final DeviceRepository deviceRepository;
+    private final TelemetryCachingRepository telemetryCachingRepository;
 
     public Mono<ServerResponse> getHistory(ServerRequest request) {
         return Mono.zip(getIdMono(request), getInstantMono(request, FROM), getInstantMono(request, TO), getDeviceTypeMono(request))
@@ -91,8 +92,10 @@ public class DevicesHandler {
     }
 
     private Mono<Instant> getInstantMono(ServerRequest request, String period) {
-        return Mono.fromCallable(() -> Instant.parse(request.queryParam(period)
-                .orElseThrow()));
+        return Mono.fromCallable(() -> request.queryParam(period)
+                .map(LocalDateTime::parse)
+                .map(localDateTime -> localDateTime.toInstant(ZoneOffset.UTC))
+                .orElseThrow());
     }
 
     private Mono<UUID> getIdMono(ServerRequest request) {
@@ -106,9 +109,7 @@ public class DevicesHandler {
     }
 
     private Mono<List<TelemetryDto>> getTelemetriesMonoList(Tuple4<UUID, Instant, Instant, DeviceType> tuple) {
-        return telemetryService.findByDeviceIdAndLastUpdatedBetween(tuple.getT1(), tuple.getT2(), tuple.getT3(), tuple.getT4())
-                .map(EventToDtoMapper::mapToDto)
-                .collectList();
+        return telemetryCachingRepository.getFromCacheOrDb(tuple.getT1(), tuple.getT2(), tuple.getT3(), tuple.getT4());
     }
 
     private Flux<TelemetryDto> getRealTimeData(Tuple3<UUID, Integer, DeviceType> tuple) {

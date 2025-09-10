@@ -55,3 +55,5 @@ kafka:
       fetch.min.bytes: 128
       fetch.max.wait.ms: 5000
       value.subject.name.strategy: io.confluent.kafka.serializers.subject.TopicRecordNameStrategy
+cache:
+  expiration.time.min: 5

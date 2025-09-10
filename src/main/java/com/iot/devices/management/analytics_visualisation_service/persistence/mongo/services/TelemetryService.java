@@ -1,13 +1,16 @@
 package com.iot.devices.management.analytics_visualisation_service.persistence.mongo.services;
 
 import com.google.common.collect.ImmutableMap;
+import com.iot.devices.management.analytics_visualisation_service.dto.TelemetryDto;
+import com.iot.devices.management.analytics_visualisation_service.mapping.EventToDtoMapper;
 import com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceType;
-import com.iot.devices.management.analytics_visualisation_service.persistence.mongo.model.*;
+import com.iot.devices.management.analytics_visualisation_service.persistence.mongo.model.TelemetryEvent;
 import com.iot.devices.management.analytics_visualisation_service.persistence.mongo.repo.*;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -23,7 +26,7 @@ public class TelemetryService {
                             SoilMoistureSensorRepository soilMoistureSensorRepository,
                             TemperatureSensorRepository temperatureSensorRepository,
                             ThermostatRepository thermostatRepository) {
-        this.repositoryByType = ImmutableMap.<DeviceType, TelemetryRepository>builder()
+        this.repositoryByType = ImmutableMap.<DeviceType, TelemetryRepository<? extends TelemetryEvent>>builder()
                 .put(DOOR_SENSOR, doorSensorRepository)
                 .put(ENERGY_METER, energyMeterRepository)
                 .put(SMART_LIGHT, smartLightRepository)
@@ -34,10 +37,12 @@ public class TelemetryService {
                 .build();
     }
 
-    private final Map<DeviceType, TelemetryRepository> repositoryByType;
+    private final Map<DeviceType, TelemetryRepository<? extends TelemetryEvent>> repositoryByType;
 
 
-    public <T extends TelemetryEvent> Flux<T> findByDeviceIdAndLastUpdatedBetween(UUID deviceId, Instant from, Instant to, DeviceType deviceType) {
-        return repositoryByType.get(deviceType).findByDeviceIdAndLastUpdatedBetween(deviceId, from, to);
+    public Mono<List<TelemetryDto>> findByDeviceIdAndLastUpdatedBetween(UUID deviceId, Instant from, Instant to, DeviceType deviceType) {
+        return repositoryByType.get(deviceType).findByDeviceIdAndLastUpdatedBetween(deviceId, from, to)
+                .map(EventToDtoMapper::mapToDto)
+                .collectList();
     }
 }
