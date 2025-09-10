@@ -23,6 +23,10 @@ spring:
       max-size: 20
       max-idle-time: 30s
       max-create-connection-time: 10s
+  redis:
+    host: localhost
+    port: 6379
+    password: qwerty
 management:
   endpoints:
     web:
@@ -61,3 +65,5 @@ kafka:
       key.serializer: org.apache.kafka.common.serialization.StringSerializer
       value.serializer: io.confluent.kafka.serializers.KafkaAvroSerializer
       schema.registry.url: mock://my-scope:8081
+cache:
+  expiration.time.min: 5
