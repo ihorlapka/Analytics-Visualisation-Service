@@ -2,12 +2,14 @@ package com.iot.devices.management.analytics_visualisation_service.persistence.m
 
 import com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceStatus;
 import lombok.*;
-import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.mapping.TimeSeries;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.Instant;
 import java.util.UUID;
+
+import static org.springframework.data.mongodb.core.timeseries.Granularity.MINUTES;
 
 @Data
 @Builder
@@ -15,10 +17,15 @@ import java.util.UUID;
 @AllArgsConstructor
 @EqualsAndHashCode(of = {"deviceId", "lastUpdated"})
 @Document(collection = TemperatureSensorEvent.TEMPERATURE_SENSORS_COLLECTION)
+@TimeSeries(
+        timeField = "lastUpdated",
+        metaField = "deviceId",
+        granularity = MINUTES
+)
 public class TemperatureSensorEvent implements TelemetryEvent {
 
     public static final String TEMPERATURE_SENSORS_COLLECTION = "temperature_sensors";
-    @Id
+
     private UUID deviceId;
 
     private Float temperature;

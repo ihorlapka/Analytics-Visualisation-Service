@@ -52,7 +52,7 @@ public class TelemetryCachingRepository {
         final String key = createKey(deviceId, from, to, deviceType);
         final long startTime = currentTimeMillis();
         final RListReactive<TelemetryDto> cache = redissonReactiveClient.getList(key, new TypedJsonJacksonCodec(deviceType.getDtoClass(), objectMapper));
-        return cache.get()
+        return cache.readAll()
                 .filter(cacheList -> !cacheList.isEmpty())
                 .flatMap(cacheList -> {
                     kpiMetricLogger.recordCacheLatency(currentTimeMillis() - startTime);
@@ -64,8 +64,8 @@ public class TelemetryCachingRepository {
 
     private Mono<List<TelemetryDto>> loadFromDbAndStoreToCache(UUID deviceId, Instant from, Instant to, DeviceType deviceType,
                                                                RListReactive<TelemetryDto> cache, String key) {
-        kpiMetricLogger.incCacheMisses();
         return telemetryService.findByDeviceIdAndLastUpdatedBetween(deviceId, from, to, deviceType)
+                .doOnSuccess(dbList -> kpiMetricLogger.incCacheMisses())
                 .flatMap(dbList -> {
                     if (!dbList.isEmpty()) {
                         return cache.addAll(dbList)

@@ -24,6 +24,10 @@ spring:
       max-size: 20
       max-idle-time: 30s
       max-create-connection-time: 10s
+  redis:
+    host: redisHost
+    port: 6379
+    password: somePassword
 management:
   endpoints:
     web:

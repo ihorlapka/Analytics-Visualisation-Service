@@ -1,8 +1,6 @@
 package com.iot.devices.management.analytics_visualisation_service.mapping;
 
 import com.google.common.collect.ImmutableMap;
-import com.iot.devices.SmartPlug;
-import com.iot.devices.Thermostat;
 import com.iot.devices.management.analytics_visualisation_service.dto.*;
 import com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceType;
 import com.iot.devices.management.analytics_visualisation_service.persistence.mongo.model.*;
@@ -40,10 +38,10 @@ public class EventToDtoMapper {
             case DoorSensorEvent ds -> DOOR_SENSOR;
             case EnergyMeterEvent em -> ENERGY_METER;
             case SmartLightEvent sl -> SMART_LIGHT;
-            case SmartPlug sp -> SMART_PLUG;
+            case SmartPlugEvent sp -> SMART_PLUG;
             case SoilMoistureSensorEvent sms -> SOIL_MOISTURE_SENSOR;
             case TemperatureSensorEvent ts -> TEMPERATURE_SENSOR;
-            case Thermostat t -> THERMOSTAT;
+            case ThermostatEvent t -> THERMOSTAT;
             default -> throw new IllegalArgumentException("Unknown event type");
         };
     }
