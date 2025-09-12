@@ -26,10 +26,10 @@ public class DoorSensorAnalyticProvider implements AnalyticProvider<DoorSensorDt
     }
 
     private Integer increaseIfOpened(DoorSensorDto event) {
-        if (event.getIsLastOpened() == null) {
+        if (event.getLastOpened() == null) {
             return null;
         }
-        return Objects.equals(event.getIsLastOpened(), event.getLastUpdated()) ? 1 : 0;
+        return Objects.equals(event.getLastOpened(), event.getLastUpdated()) ? 1 : 0;
     }
 
     private Boolean isTemperAlert(Boolean a, Boolean b) {

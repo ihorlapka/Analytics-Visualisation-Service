@@ -3,12 +3,17 @@ package com.iot.devices.management.analytics_visualisation_service.cache;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.iot.devices.management.analytics_visualisation_service.dto.*;
+import org.redisson.Redisson;
+import org.redisson.api.RedissonReactiveClient;
+import org.redisson.config.Config;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
+import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
+import org.springframework.data.redis.connection.lettuce.LettuceClientConfiguration;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
@@ -34,8 +39,29 @@ public class CacheConfig {
     public static final String TEMPERATURE_SENSOR_CACHE = "TemperatureSensorCache";
     public static final String THERMOSTAT_CACHE = "ThermostatCache";
 
-//    @Bean
-    //TODO: remove?
+    @Bean
+    public RedisStandaloneConfiguration redisStandaloneConfiguration(@Value("${spring.redis.host}") String host,
+                                                                     @Value("${spring.redis.port}") int port) {
+        return new RedisStandaloneConfiguration(host, port);
+    }
+
+    @Bean
+    public LettuceConnectionFactory lettuceConnectionFactory(RedisStandaloneConfiguration redisConfiguration) {
+        return new LettuceConnectionFactory(redisConfiguration, LettuceClientConfiguration.builder().build());
+    }
+
+    @Bean(destroyMethod = "shutdown")
+    public RedissonReactiveClient redissonReactiveClient(@Value("${spring.redis.host}") String host,
+                                                         @Value("${spring.redis.port}") int port) {
+        Config config = new Config();
+        String address = "redis://" + host + ":" + port;
+        config.useSingleServer()
+                .setAddress(address)
+                .setDatabase(0);
+        return Redisson.create(config).reactive();
+    }
+
+    @Bean
     public RedisCacheManager cacheManager(LettuceConnectionFactory factory, ObjectMapper objectMapper,
                                           @Value("${" + PROPERTIES_PREFIX + ".expiration.time.min}") int expirationTimeMin) {
         RedisCacheConfiguration defaultCacheConfig = RedisCacheConfiguration.defaultCacheConfig()

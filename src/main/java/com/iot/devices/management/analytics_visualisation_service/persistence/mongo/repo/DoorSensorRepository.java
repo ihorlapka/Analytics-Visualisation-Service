@@ -2,6 +2,7 @@ package com.iot.devices.management.analytics_visualisation_service.persistence.m
 
 import com.iot.devices.management.analytics_visualisation_service.persistence.mongo.model.DoorSensorEvent;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -9,4 +10,6 @@ import java.util.UUID;
 public interface DoorSensorRepository extends TelemetryRepository<DoorSensorEvent> {
 
     Flux<DoorSensorEvent> findByDeviceIdAndLastUpdatedBetween(UUID deviceId, Instant from, Instant to);
+
+    Mono<DoorSensorEvent> findFirstByDeviceIdOrderByLastUpdatedDesc(UUID deviceId);
 }

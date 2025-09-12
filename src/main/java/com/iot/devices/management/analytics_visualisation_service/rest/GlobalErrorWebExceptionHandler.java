@@ -48,6 +48,7 @@ public class GlobalErrorWebExceptionHandler extends AbstractErrorWebExceptionHan
     private Mono<ServerResponse> renderErrorResponse(ServerRequest request) {
         Map<String, Object> errorPropertiesMap = getErrorAttributes(request, ErrorAttributeOptions.defaults());
         Throwable error = getError(request);
+        log.error("Unexpected error occurred", error);
 
         if (isClientError(error)) {
             errorPropertiesMap.put(STATUS, "400");
@@ -71,7 +72,6 @@ public class GlobalErrorWebExceptionHandler extends AbstractErrorWebExceptionHan
 
     private boolean isClientError(Throwable e) {
         return e instanceof DateTimeParseException
-                || e instanceof NoSuchElementException
-                || e instanceof IllegalArgumentException;
+                || e instanceof NoSuchElementException;
     }
 }

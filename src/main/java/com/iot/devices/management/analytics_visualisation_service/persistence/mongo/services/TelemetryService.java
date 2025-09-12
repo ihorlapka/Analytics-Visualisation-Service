@@ -45,4 +45,9 @@ public class TelemetryService {
                 .map(EventToDtoMapper::mapToDto)
                 .collectList();
     }
+
+    public Mono<TelemetryDto> findLatestTelemetry(UUID deviceId, DeviceType deviceType) {
+        return repositoryByType.get(deviceType).findFirstByDeviceIdOrderByLastUpdatedDesc(deviceId)
+                .map(EventToDtoMapper::mapToDto);
+    }
 }

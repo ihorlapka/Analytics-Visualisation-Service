@@ -10,6 +10,7 @@ import org.redisson.api.RListReactive;
 import org.redisson.api.RedissonReactiveClient;
 import org.redisson.codec.TypedJsonJacksonCodec;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
@@ -17,7 +18,8 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
-import static com.iot.devices.management.analytics_visualisation_service.cache.CacheConfig.PROPERTIES_PREFIX;
+import static com.iot.devices.management.analytics_visualisation_service.cache.CacheConfig.*;
+import static com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceType.*;
 import static java.lang.System.currentTimeMillis;
 import static java.time.Duration.ofMinutes;
 import static java.time.temporal.ChronoUnit.MINUTES;
@@ -75,6 +77,41 @@ public class TelemetryCachingRepository {
                     }
                     return Mono.just(emptyList());
                 });
+    }
+
+    @Cacheable(DOOR_SENSOR_CACHE)
+    public Mono<TelemetryDto> findLatestDoorSensorTelemetry(UUID deviceId) {
+        return telemetryService.findLatestTelemetry(deviceId, DOOR_SENSOR);
+    }
+
+    @Cacheable(ENERGY_METER_CACHE)
+    public Mono<TelemetryDto> findLatestEnergyMeterTelemetry(UUID deviceId) {
+        return telemetryService.findLatestTelemetry(deviceId, ENERGY_METER);
+    }
+
+    @Cacheable(SMART_LIGHT_CACHE)
+    public Mono<TelemetryDto> findLatestSmartLightTelemetry(UUID deviceId) {
+        return telemetryService.findLatestTelemetry(deviceId, SMART_LIGHT);
+    }
+
+    @Cacheable(SMART_PLUG_CACHE)
+    public Mono<TelemetryDto> findLatestSmartPlugTelemetry(UUID deviceId) {
+        return telemetryService.findLatestTelemetry(deviceId, SMART_PLUG);
+    }
+
+    @Cacheable(SOIL_MOISTURE_SENSOR_CACHE)
+    public Mono<TelemetryDto> findLatestSoilMoistureSensorTelemetry(UUID deviceId) {
+        return telemetryService.findLatestTelemetry(deviceId, SOIL_MOISTURE_SENSOR);
+    }
+
+    @Cacheable(TEMPERATURE_SENSOR_CACHE)
+    public Mono<TelemetryDto> findLatestTemperatureSensorTelemetry(UUID deviceId) {
+        return telemetryService.findLatestTelemetry(deviceId, TEMPERATURE_SENSOR);
+    }
+
+    @Cacheable(THERMOSTAT_CACHE)
+    public Mono<TelemetryDto> findLatestThermostatTelemetry(UUID deviceId) {
+        return telemetryService.findLatestTelemetry(deviceId, THERMOSTAT);
     }
 
     private boolean isAllowedForCaching(Instant from, Instant to) {

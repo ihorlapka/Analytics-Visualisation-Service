@@ -4,6 +4,7 @@ import com.iot.devices.management.analytics_visualisation_service.persistence.mo
 import org.springframework.data.mongodb.repository.ReactiveMongoRepository;
 import org.springframework.data.repository.NoRepositoryBean;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.time.Instant;
 import java.util.UUID;
@@ -12,4 +13,6 @@ import java.util.UUID;
 public interface TelemetryRepository<T extends TelemetryEvent> extends ReactiveMongoRepository<T, UUID> {
 
     Flux<T> findByDeviceIdAndLastUpdatedBetween(UUID deviceId, Instant start, Instant end);
+
+    Mono<T> findFirstByDeviceIdOrderByLastUpdatedDesc(UUID deviceId);
 }

@@ -13,9 +13,6 @@ import com.iot.devices.management.analytics_visualisation_service.persistence.mo
 import com.mongodb.client.model.CreateCollectionOptions;
 import com.mongodb.client.model.TimeSeriesGranularity;
 import com.mongodb.client.model.TimeSeriesOptions;
-import com.mongodb.reactivestreams.client.MongoClient;
-import com.mongodb.reactivestreams.client.MongoClients;
-import com.mongodb.reactivestreams.client.MongoDatabase;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,6 +24,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.data.mongodb.ReactiveMongoDatabaseFactory;
 import org.springframework.data.mongodb.repository.config.EnableReactiveMongoRepositories;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.*;
@@ -36,6 +34,7 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.MongoDBContainer;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
 
@@ -46,7 +45,6 @@ import java.util.UUID;
 import java.util.stream.Stream;
 
 import static com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceType.THERMOSTAT;
-import static com.iot.devices.management.analytics_visualisation_service.persistence.mongo.model.ThermostatEvent.THERMOSTATS_COLLECTION;
 import static java.time.ZoneOffset.UTC;
 import static java.time.temporal.ChronoUnit.MILLIS;
 import static java.time.temporal.ChronoUnit.SECONDS;
@@ -57,6 +55,7 @@ import static org.mockito.Mockito.*;
 @Slf4j
 @ActiveProfiles("test")
 @ExtendWith(SpringExtension.class)
+@DirtiesContext(methodMode = DirtiesContext.MethodMode.AFTER_METHOD)
 @DataMongoTest
 @ContextConfiguration(classes = {
         TelemetryService.class,
@@ -74,7 +73,7 @@ import static org.mockito.Mockito.*;
 @Testcontainers
 class TelemetryCachingRepositoryTest {
 
-    private static final String DATABASE_NAME = "my-db";
+    private static final String DATABASE_NAME = "telemetry-events";
 
     static MongoDBContainer mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo:7.0.23"))
             .withEnv("MONGO_INITDB_DATABASE", DATABASE_NAME);
@@ -99,21 +98,13 @@ class TelemetryCachingRepositoryTest {
     TelemetryCachingRepository telemetryCachingRepository;
     @Autowired
     ThermostatRepository thermostatRepository;
+    @Autowired
+    ReactiveMongoDatabaseFactory reactiveMongoDatabaseFactory;
 
     @BeforeAll
     static void start() {
         mongoDBContainer.start();
         redisContainer.start();
-
-        try (MongoClient mongoClient = MongoClients.create(mongoDBContainer.getConnectionString())) {
-            MongoDatabase database = mongoClient.getDatabase(DATABASE_NAME);
-            CreateCollectionOptions options = new CreateCollectionOptions();
-            TimeSeriesOptions timeSeriesOptions = new TimeSeriesOptions("lastUpdated");
-            timeSeriesOptions.metaField("deviceId");
-            timeSeriesOptions.granularity(TimeSeriesGranularity.MINUTES);
-            options.timeSeriesOptions(timeSeriesOptions);
-            database.createCollection(THERMOSTATS_COLLECTION, options);
-        }
     }
 
     @AfterAll
@@ -122,9 +113,33 @@ class TelemetryCachingRepositoryTest {
         redisContainer.close();
     }
 
+    @BeforeEach
+    void createTimeSeriesCollectionIfNotExist() {
+        reactiveMongoDatabaseFactory.getMongoDatabase()
+                .flatMap(database -> Flux.from(database.listCollectionNames())
+                        .filter(name -> name.equals(ThermostatEvent.THERMOSTATS_COLLECTION))
+                        .hasElements()
+                        .flatMap(exists -> {
+                            if (exists) {
+                                return Mono.empty();
+                            }
+                            return Mono.from(database.createCollection(ThermostatEvent.THERMOSTATS_COLLECTION,
+                                    new CreateCollectionOptions().timeSeriesOptions(
+                                            new TimeSeriesOptions("lastUpdated")
+                                                    .metaField("deviceId")
+                                                    .granularity(TimeSeriesGranularity.MINUTES))
+                            ));
+                        })
+                )
+                .block();
+    }
+
     @AfterEach
     void tearDown() {
         thermostatRepository.deleteAll().block();
+        reactiveMongoDatabaseFactory.getMongoDatabase()
+                .map(database -> database.getCollection(ThermostatEvent.THERMOSTATS_COLLECTION).drop())
+                .block();
         Mockito.verifyNoMoreInteractions(kpiMetricLogger);
     }
 
@@ -145,7 +160,7 @@ class TelemetryCachingRepositoryTest {
     void notAllowedForCaching() {
         UUID uuid = UUID.randomUUID();
         List<ThermostatEvent> thermostats = getThermostats(uuid);
-        thermostatRepository.saveAll(thermostats).blockLast();
+        thermostatRepository.insert(thermostats).blockLast();
 
         Mono<List<TelemetryDto>> data = telemetryCachingRepository.getFromCacheOrDb(uuid, FROM, TO.plus(1, MILLIS), THERMOSTAT);
 
@@ -161,7 +176,7 @@ class TelemetryCachingRepositoryTest {
     void cacheIsEmptyAndDbNot() {
         UUID uuid = UUID.randomUUID();
         List<ThermostatEvent> thermostats = getThermostats(uuid);
-        thermostatRepository.saveAll(thermostats).blockLast();
+        thermostatRepository.insert(thermostats).blockLast();
 
         Mono<List<TelemetryDto>> data = telemetryCachingRepository.getFromCacheOrDb(uuid, FROM, TO, THERMOSTAT);
 
@@ -180,10 +195,9 @@ class TelemetryCachingRepositoryTest {
     void cacheIsNotEmpty() {
         UUID uuid = UUID.randomUUID();
         List<ThermostatEvent> thermostats = getThermostats(uuid);
-        thermostatRepository.saveAll(thermostats).blockLast();
+        thermostatRepository.insert(thermostats).blockLast();
 
         Mono<List<TelemetryDto>> firstCall = telemetryCachingRepository.getFromCacheOrDb(uuid, FROM, TO, THERMOSTAT);
-
         StepVerifier.create(firstCall)
                 .expectNext(Stream.of(thermostats.get(1), thermostats.get(2), thermostats.get(3))
                         .map(EventToDtoMapper::mapToDto)
@@ -192,8 +206,8 @@ class TelemetryCachingRepositoryTest {
                 .verify();
 
         sleep(2000);
-        Mono<List<TelemetryDto>> secondCall = telemetryCachingRepository.getFromCacheOrDb(uuid, FROM, TO, THERMOSTAT);
 
+        Mono<List<TelemetryDto>> secondCall = telemetryCachingRepository.getFromCacheOrDb(uuid, FROM, TO, THERMOSTAT);
         StepVerifier.create(secondCall)
                 .expectNext(Stream.of(thermostats.get(1), thermostats.get(2), thermostats.get(3))
                         .map(EventToDtoMapper::mapToDto)

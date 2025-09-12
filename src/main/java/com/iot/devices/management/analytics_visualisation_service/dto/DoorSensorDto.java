@@ -30,7 +30,7 @@ public record DoorSensorDto(
         return lastUpdated;
     }
 
-    public Instant getIsLastOpened() {
+    public Instant getLastOpened() {
         return lastOpened;
     }
 

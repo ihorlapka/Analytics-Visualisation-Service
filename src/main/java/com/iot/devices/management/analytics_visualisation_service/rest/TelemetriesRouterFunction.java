@@ -24,7 +24,8 @@ public class TelemetriesRouterFunction {
                         builder.GET("/history", deviceHandler::getHistory)
                                 .GET("/realTime", deviceHandler::getRealTimeTelemetry)
                                 .GET("/historyWithRealTime", deviceHandler::getHistoryWithRealTimeData)
-                                .GET("/analytics", deviceHandler::getAnalytics))
+                                .GET("/analytics", deviceHandler::getAnalytics)
+                                .GET("/lastTelemetry", deviceHandler::getLastTelemetry))
                 .build()
                 .and(route()
                         .nest(path("api/v1"), builder ->
