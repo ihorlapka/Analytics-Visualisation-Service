@@ -18,7 +18,7 @@ public class DoorSensorAnalyticProvider implements AnalyticProvider<DoorSensorDt
     @Override
     public DoorSensorAnalytic calculate(List<DoorSensorDto> events) {
         return events.stream()
-                .map(event -> DoorSensorAnalytic.of(increaseIfOpened(event), event.getIsTamperAlert()))
+                .map(event -> DoorSensorAnalytic.of(increaseIfOpened(event), event.getTamperAlert()))
                 .reduce((a, b) -> DoorSensorAnalytic.of(
                         calculateValue(a.getOpenCount(), b.getOpenCount(), Integer::sum),
                         isTemperAlert(a.getTemperAlert(), b.getTemperAlert())))

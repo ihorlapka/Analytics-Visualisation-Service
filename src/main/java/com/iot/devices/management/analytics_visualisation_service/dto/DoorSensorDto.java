@@ -39,7 +39,7 @@ public record DoorSensorDto(
         return status;
     }
 
-    public Boolean getIsTamperAlert() {
+    public Boolean getTamperAlert() {
         return tamperAlert;
     }
 }
