@@ -1,5 +1,6 @@
 package com.iot.devices.management.analytics_visualisation_service.kafka;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.iot.devices.*;
 import com.iot.devices.management.analytics_visualisation_service.dto.DoorSensorDto;
 import com.iot.devices.management.analytics_visualisation_service.dto.SmartPlugDto;
@@ -7,17 +8,22 @@ import com.iot.devices.management.analytics_visualisation_service.dto.Thermostat
 import com.iot.devices.management.analytics_visualisation_service.health.HealthConfig;
 import com.iot.devices.management.analytics_visualisation_service.kafka.producer.KafkaProducerProperties;
 import com.iot.devices.management.analytics_visualisation_service.kafka.producer.TestKafkaProducer;
+import com.iot.devices.management.analytics_visualisation_service.metrics.KpiMetricLogger;
+import com.iot.devices.management.analytics_visualisation_service.persistence.mongo.cache.TelemetryCachingRepository;
+import com.iot.devices.management.analytics_visualisation_service.persistence.mongo.services.TelemetryService;
 import com.iot.devices.management.analytics_visualisation_service.stream.TelemetryStream;
 import io.micrometer.core.instrument.MockClock;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.*;
+import org.redisson.api.RedissonReactiveClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.junit.jupiter.Container;
@@ -49,7 +55,9 @@ import static org.mockito.Mockito.*;
                 KafkaConsumerProperties.class,
                 HealthConfig.class,
                 SimpleMeterRegistry.class,
-                MockClock.class
+                MockClock.class,
+                TelemetryCachingRepository.class,
+                ObjectMapper.class
         },
         properties = "classpath:application-test.yaml")
 @Testcontainers
@@ -62,6 +70,12 @@ public class ReactiveKafkaConsumerRunnerTest {
     TestKafkaProducer kafkaProducer;
     @MockitoSpyBean
     TelemetryStream telemetryStream;
+    @MockitoBean
+    TelemetryService telemetryService;
+    @MockitoBean
+    RedissonReactiveClient redissonReactiveClient;
+    @MockitoBean
+    KpiMetricLogger kpiMetricLogger;
 
     @Container
     @SuppressWarnings("deprecation")
