@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
-import static com.iot.devices.management.analytics_visualisation_service.persistence.mongo.cache.TelemetryCachingRepository.CACHE_SIMPLE_KEY;
+import static com.iot.devices.management.analytics_visualisation_service.persistence.mongo.cache.TelemetryCachingRepository.CACHE_AGGREGATED_KEY;
 
 @Slf4j
 @Component
@@ -24,7 +24,7 @@ public class CacheSizeMetricsUpdater {
     @Scheduled(fixedRate = 5, timeUnit = TimeUnit.SECONDS)
     public void recordCacheSize() {
         redissonReactiveClient.getKeys()
-                .getKeys(new KeysScanParams().pattern("*" + CACHE_SIMPLE_KEY + "*"))
+                .getKeys(new KeysScanParams().pattern("*" + CACHE_AGGREGATED_KEY + "*"))
                 .count()
                 .filter(Objects::nonNull)
                 .doOnSuccess(kpiMetricLogger::recordKeysSize)

@@ -1,6 +1,7 @@
 package com.iot.devices.management.analytics_visualisation_service.cache;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.iot.devices.management.analytics_visualisation_service.dto.*;
 import org.redisson.Redisson;
@@ -103,6 +104,7 @@ public class CacheConfig {
     public ObjectMapper objectMapper() {
         ObjectMapper mapper = new ObjectMapper();
         mapper.registerModule(new JavaTimeModule());
+        mapper.configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false);
         return mapper;
     }
 }

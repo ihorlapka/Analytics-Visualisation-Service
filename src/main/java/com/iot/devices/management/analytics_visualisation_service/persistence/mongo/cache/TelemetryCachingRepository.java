@@ -1,7 +1,8 @@
 package com.iot.devices.management.analytics_visualisation_service.persistence.mongo.cache;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.iot.devices.management.analytics_visualisation_service.dto.TelemetryDto;
+import com.iot.devices.*;
+import com.iot.devices.management.analytics_visualisation_service.dto.*;
 import com.iot.devices.management.analytics_visualisation_service.metrics.KpiMetricLogger;
 import com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceType;
 import com.iot.devices.management.analytics_visualisation_service.persistence.mongo.services.TelemetryService;
@@ -10,6 +11,7 @@ import org.redisson.api.RListReactive;
 import org.redisson.api.RedissonReactiveClient;
 import org.redisson.codec.TypedJsonJacksonCodec;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
@@ -19,6 +21,11 @@ import java.util.List;
 import java.util.UUID;
 
 import static com.iot.devices.management.analytics_visualisation_service.cache.CacheConfig.*;
+import static com.iot.devices.management.analytics_visualisation_service.mapping.RecordToDtoMapper.*;
+import static com.iot.devices.management.analytics_visualisation_service.mapping.RecordToDtoMapper.mapSmartPlug;
+import static com.iot.devices.management.analytics_visualisation_service.mapping.RecordToDtoMapper.mapSoilMoistureSensor;
+import static com.iot.devices.management.analytics_visualisation_service.mapping.RecordToDtoMapper.mapTemperatureSensor;
+import static com.iot.devices.management.analytics_visualisation_service.mapping.RecordToDtoMapper.mapThermostat;
 import static com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceType.*;
 import static java.lang.System.currentTimeMillis;
 import static java.time.Duration.ofMinutes;
@@ -29,7 +36,7 @@ import static java.util.Collections.emptyList;
 @Component
 public class TelemetryCachingRepository {
 
-    public static final String CACHE_SIMPLE_KEY = "Cache::SimpleKey";
+    public static final String CACHE_AGGREGATED_KEY = "Cache::AggregatedKey";
 
     private final TelemetryService telemetryService;
     private final RedissonReactiveClient redissonReactiveClient;
@@ -114,11 +121,46 @@ public class TelemetryCachingRepository {
         return telemetryService.findLatestTelemetry(deviceId, THERMOSTAT);
     }
 
+    @CachePut(value = DOOR_SENSOR_CACHE, key = "#ds.deviceId")
+    public DoorSensorDto mapAndCacheDoorSensorDto(DoorSensor ds) {
+        return mapDoorSensor(ds);
+    }
+
+    @CachePut(value = ENERGY_METER_CACHE, key = "#em.deviceId")
+    public EnergyMeterDto mapAndCacheEnergyMeterDto(EnergyMeter em) {
+        return mapEnergyMeter(em);
+    }
+
+    @CachePut(value = SMART_LIGHT_CACHE, key = "#sl.deviceId")
+    public SmartLightDto mapAndCacheSmartLightDto(SmartLight sl) {
+        return mapSmartLight(sl);
+    }
+
+    @CachePut(value = SMART_PLUG_CACHE, key = "#sp.deviceId")
+    public SmartPlugDto mapAndCacheSmartPlugDto(SmartPlug sp) {
+        return mapSmartPlug(sp);
+    }
+
+    @CachePut(value = SOIL_MOISTURE_SENSOR_CACHE, key = "#sms.deviceId")
+    public SoilMoistureSensorDto getSoilMoistureSensorDto(SoilMoistureSensor sms) {
+        return mapSoilMoistureSensor(sms);
+    }
+
+    @CachePut(value = TEMPERATURE_SENSOR_CACHE, key = "#ts.deviceId")
+    public TemperatureSensorDto mapAndCacheTemperatureSensorDto(TemperatureSensor ts) {
+        return mapTemperatureSensor(ts);
+    }
+
+    @CachePut(value = THERMOSTAT_CACHE, key = "#t.deviceId")
+    public ThermostatDto mapAndCacheThermostatDto(Thermostat t) {
+        return mapThermostat(t);
+    }
+
     private boolean isAllowedForCaching(Instant from, Instant to) {
         return from.truncatedTo(MINUTES).equals(from) && to.truncatedTo(MINUTES).equals(to);
     }
 
     private String createKey(UUID deviceId, Instant from, Instant to, DeviceType deviceType) {
-        return deviceType.getId() + CACHE_SIMPLE_KEY + " [" + deviceId + ", " + from + ", " + to + "]";
+        return deviceType.getId() + CACHE_AGGREGATED_KEY + " [" + deviceId + ", " + from + ", " + to + "]";
     }
 }

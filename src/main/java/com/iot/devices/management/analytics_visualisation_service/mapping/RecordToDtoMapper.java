@@ -6,7 +6,6 @@ import com.iot.devices.management.analytics_visualisation_service.persistence.en
 import com.iot.devices.management.analytics_visualisation_service.persistence.enums.DoorState;
 import com.iot.devices.management.analytics_visualisation_service.persistence.enums.ThermostatMode;
 import lombok.experimental.UtilityClass;
-import org.apache.avro.specific.SpecificRecord;
 
 import java.util.UUID;
 
@@ -14,19 +13,6 @@ import static java.util.Optional.ofNullable;
 
 @UtilityClass
 public class RecordToDtoMapper {
-
-    public static TelemetryDto mapToDto(SpecificRecord record) {
-        return switch (record) {
-            case DoorSensor ds -> mapDoorSensor(ds);
-            case EnergyMeter em -> mapEnergyMeter(em);
-            case SmartLight sl -> mapSmartLight(sl);
-            case SmartPlug sp -> mapSmartPlug(sp);
-            case SoilMoistureSensor sms -> mapSoilMoistureSensor(sms);
-            case TemperatureSensor ts -> mapTemperatureSensor(ts);
-            case Thermostat t -> mapThermostat(t);
-            default -> throw new IllegalArgumentException("Unknown device type");
-        };
-    }
 
     public static DoorSensorDto mapDoorSensor(DoorSensor ds) {
         return new DoorSensorDto(

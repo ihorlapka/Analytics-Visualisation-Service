@@ -1,8 +1,9 @@
 package com.iot.devices.management.analytics_visualisation_service.stream;
 
 import com.iot.devices.*;
-import com.iot.devices.management.analytics_visualisation_service.dto.TelemetryDto;
+import com.iot.devices.management.analytics_visualisation_service.dto.*;
 import com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceType;
+import com.iot.devices.management.analytics_visualisation_service.persistence.mongo.cache.TelemetryCachingRepository;
 import lombok.RequiredArgsConstructor;
 import org.apache.avro.specific.SpecificRecord;
 import org.springframework.stereotype.Component;
@@ -14,7 +15,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
-import static com.iot.devices.management.analytics_visualisation_service.mapping.RecordToDtoMapper.*;
 import static com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceType.*;
 import static java.util.Optional.ofNullable;
 
@@ -26,12 +26,14 @@ public class TelemetryStream {
 
     private final Map<DeviceType, Sinks.Many<TelemetryDto>> sinkByClass = new ConcurrentHashMap<>();
 
+    private final TelemetryCachingRepository telemetryCachingRepository;
+
     public Mono<Void> publish(SpecificRecord record) {
         return Mono.just(sinkByClass.compute(getType(record), (k, v) -> {
             if (v == null) {
                 v = Sinks.many().replay().limit(HISTORY_SIZE);
             }
-            v.tryEmitNext(mapToDto(record));
+            v.tryEmitNext(mapAndPutInCache(record));
             return v;
         })).then();
     }
@@ -49,6 +51,19 @@ public class TelemetryStream {
 
     public void purge() {
         sinkByClass.clear();
+    }
+
+    private TelemetryDto mapAndPutInCache(SpecificRecord record) {
+        return switch (record) {
+            case DoorSensor ds -> telemetryCachingRepository.mapAndCacheDoorSensorDto(ds);
+            case EnergyMeter em -> telemetryCachingRepository.mapAndCacheEnergyMeterDto(em);
+            case SmartLight sl -> telemetryCachingRepository.mapAndCacheSmartLightDto(sl);
+            case SmartPlug sp -> telemetryCachingRepository.mapAndCacheSmartPlugDto(sp);
+            case SoilMoistureSensor sms -> telemetryCachingRepository.getSoilMoistureSensorDto(sms);
+            case TemperatureSensor ts -> telemetryCachingRepository.mapAndCacheTemperatureSensorDto(ts);
+            case Thermostat t -> telemetryCachingRepository.mapAndCacheThermostatDto(t);
+            default -> throw new IllegalArgumentException("Unknown device type");
+        };
     }
 
     private DeviceType getType(SpecificRecord record) {
