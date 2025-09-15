@@ -33,7 +33,7 @@ public class TelemetryStream {
             if (v == null) {
                 v = Sinks.many().replay().limit(HISTORY_SIZE);
             }
-            v.tryEmitNext(mapAndPutInCache(record));
+            v.tryEmitNext(telemetryCachingRepository.mapAndCacheTelemetryDto(record, k));
             return v;
         })).then();
     }
@@ -51,19 +51,6 @@ public class TelemetryStream {
 
     public void purge() {
         sinkByClass.clear();
-    }
-
-    private TelemetryDto mapAndPutInCache(SpecificRecord record) {
-        return switch (record) {
-            case DoorSensor ds -> telemetryCachingRepository.mapAndCacheDoorSensorDto(ds);
-            case EnergyMeter em -> telemetryCachingRepository.mapAndCacheEnergyMeterDto(em);
-            case SmartLight sl -> telemetryCachingRepository.mapAndCacheSmartLightDto(sl);
-            case SmartPlug sp -> telemetryCachingRepository.mapAndCacheSmartPlugDto(sp);
-            case SoilMoistureSensor sms -> telemetryCachingRepository.getSoilMoistureSensorDto(sms);
-            case TemperatureSensor ts -> telemetryCachingRepository.mapAndCacheTemperatureSensorDto(ts);
-            case Thermostat t -> telemetryCachingRepository.mapAndCacheThermostatDto(t);
-            default -> throw new IllegalArgumentException("Unknown device type");
-        };
     }
 
     private DeviceType getType(SpecificRecord record) {

@@ -93,7 +93,7 @@ public class DevicesHandler {
 
     public Mono<ServerResponse> getLastTelemetry(ServerRequest request) {
         return Mono.zip(getIdMono(request), getDeviceTypeMono(request))
-                .flatMap(tuple -> findLatestTelemetry(tuple.getT1(), tuple.getT2()))
+                .flatMap(tuple -> telemetryCachingRepository.findLatestTelemetry(tuple.getT1(), tuple.getT2()))
                 .flatMap(result -> ServerResponse.ok().body(BodyInserters.fromValue(result)));
     }
 
@@ -128,17 +128,5 @@ public class DevicesHandler {
                 .flatMapMany(history -> fromIterable(history)
                         .concatWith(telemetryStream.getStream(tuple.getT4(), tuple.getT1())))
                 .distinct();
-    }
-
-    private Mono<TelemetryDto> findLatestTelemetry(UUID deviceId, DeviceType deviceType) {
-        return switch (deviceType) {
-            case DOOR_SENSOR -> telemetryCachingRepository.findLatestDoorSensorTelemetry(deviceId);
-            case ENERGY_METER -> telemetryCachingRepository.findLatestEnergyMeterTelemetry(deviceId);
-            case SMART_LIGHT -> telemetryCachingRepository.findLatestSmartLightTelemetry(deviceId);
-            case SMART_PLUG -> telemetryCachingRepository.findLatestSmartPlugTelemetry(deviceId);
-            case SOIL_MOISTURE_SENSOR -> telemetryCachingRepository.findLatestSoilMoistureSensorTelemetry(deviceId);
-            case TEMPERATURE_SENSOR -> telemetryCachingRepository.findLatestTemperatureSensorTelemetry(deviceId);
-            case THERMOSTAT -> telemetryCachingRepository.findLatestThermostatTelemetry(deviceId);
-        };
     }
 }
