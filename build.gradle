@@ -63,6 +63,11 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-data-redis-reactive:3.5.5'
 	implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
 	implementation 'org.redisson:redisson-spring-boot-starter:3.51.0'
+	implementation 'org.springframework.boot:spring-boot-starter-security:3.5.6'
+	testImplementation 'org.springframework.security:spring-security-test'
+	implementation 'io.jsonwebtoken:jjwt-api:0.12.6'
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.6'
+	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.6'
 }
 
 tasks.named('test') {

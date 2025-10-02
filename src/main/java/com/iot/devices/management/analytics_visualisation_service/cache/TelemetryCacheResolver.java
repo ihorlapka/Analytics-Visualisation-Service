@@ -6,6 +6,7 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.interceptor.CacheOperationInvocationContext;
 import org.springframework.cache.interceptor.CacheResolver;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -18,6 +19,7 @@ public class TelemetryCacheResolver implements CacheResolver {
 
     private final CacheManager cacheManager;
 
+    @NonNull
     @Override
     public Collection<? extends Cache> resolveCaches(CacheOperationInvocationContext<?> context) {
         Object[] args = context.getArgs();
