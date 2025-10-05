@@ -30,9 +30,9 @@ public class TelemetriesRouterFunction {
                 .and(route()
                         .nest(path("api/v1"), builder ->
                                 builder.GET("/devicesPerManufacturer", deviceHandler::getAmountOfDevicesPerManufacturer)
-                                        .GET("/statuses", deviceHandler::getAmountOfDevicesWithStatus))
+                                        .GET("/statuses", deviceHandler::getAmountOfDevicesPerStatus))
                         .build())
-                .and(route(GET("/.well-known/appspecific/com.chrome.devtools.json"), //not sure where it is coming from (just for skipping errors)
+                .and(route(GET("/.well-known/appspecific/com.chrome.devtools.json"), //just for skipping errors
                         request -> ServerResponse.notFound().build()));
     }
 

@@ -1,5 +1,6 @@
 package com.iot.devices.management.analytics_visualisation_service.rest;
 
+import com.iot.devices.management.analytics_visualisation_service.security.AccessNotAllowed;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.web.WebProperties;
 import org.springframework.boot.autoconfigure.web.reactive.error.AbstractErrorWebExceptionHandler;
@@ -61,6 +62,12 @@ public class GlobalErrorWebExceptionHandler extends AbstractErrorWebExceptionHan
         if (error instanceof NoResourceFoundException) {
             log.info("Ignoring missing resource: {}", request);
             return ServerResponse.status(HttpStatus.NOT_FOUND)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .build();
+        }
+        if (error instanceof AccessNotAllowed) {
+            log.info("Permission denied: {}", request);
+            return ServerResponse.status(HttpStatus.FORBIDDEN)
                     .contentType(MediaType.APPLICATION_JSON)
                     .build();
         }

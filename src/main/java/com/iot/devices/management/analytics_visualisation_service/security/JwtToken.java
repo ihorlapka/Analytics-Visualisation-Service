@@ -16,9 +16,9 @@ public class JwtToken extends AbstractAuthenticationToken {
         this.principal = principal;
     }
 
-    Authentication withAuthenticated(boolean isAuthenticated) {
+    Authentication cloneAuthenticated() {
         JwtToken cloned = new JwtToken(token, principal);
-        cloned.setAuthenticated(isAuthenticated);
+        cloned.setAuthenticated(true);
         return cloned;
     }
 

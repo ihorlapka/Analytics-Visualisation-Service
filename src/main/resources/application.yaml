@@ -39,6 +39,11 @@ management:
     diskspace:
       path: /
       threshold: 1GB
+security:
+  jwt:
+    secret-key: "some-key"
+    expiration: 86400000 # day
+    refresh-token.expiration: 604800000 # week
 kafka:
   consumer:
     topic: iot-devices-data
@@ -61,3 +66,7 @@ kafka:
       value.subject.name.strategy: io.confluent.kafka.serializers.subject.TopicRecordNameStrategy
 cache:
   expiration.time.min: 5
+logging:
+  level:
+    org.springframework.transaction: DEBUG
+    org.springframework.orm.jpa: DEBUG

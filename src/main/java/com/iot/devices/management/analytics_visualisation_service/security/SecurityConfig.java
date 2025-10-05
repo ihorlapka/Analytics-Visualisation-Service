@@ -41,10 +41,10 @@ public class SecurityConfig {
                 .csrf(ServerHttpSecurity.CsrfSpec::disable)
                 .authorizeExchange(exchange -> exchange
                         .pathMatchers(WHITE_LIST).permitAll()
-                        .pathMatchers("/api/v1/devices/**").hasAnyRole(ADMIN.name(), MANAGER.name(), SUPER_ADMIN.name())
+                        .pathMatchers("/api/v1/devices/**").hasAnyRole(USER.name(), ADMIN.name(), MANAGER.name(), SUPER_ADMIN.name())
                         .pathMatchers("/api/v1/devicesPerManufacturer").hasAnyRole(ADMIN.name(), MANAGER.name(), SUPER_ADMIN.name())
-                        .anyExchange()
-                        .authenticated()
+                        .pathMatchers("/api/v1/statuses").hasAnyRole(ADMIN.name(), MANAGER.name(), SUPER_ADMIN.name())
+                        .anyExchange().authenticated()
                 )
                 .authenticationManager(reactiveAuthenticationManager)
                 .addFilterBefore(authFilter, SecurityWebFiltersOrder.AUTHENTICATION)

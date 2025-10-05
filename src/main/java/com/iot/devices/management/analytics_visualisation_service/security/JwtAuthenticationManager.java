@@ -17,7 +17,7 @@ public class JwtAuthenticationManager implements ReactiveAuthenticationManager {
         return Mono.just(authentication)
                 .cast(JwtToken.class)
                 .filter(jwtToken -> jwtService.isTokenValid(jwtToken.getToken(), jwtToken.getPrincipal()))
-                .map(jwtToken -> jwtToken.withAuthenticated(true))
+                .map(JwtToken::cloneAuthenticated)
                 .switchIfEmpty(Mono.error(new JwtAuthenticationException("Invalid token")));
     }
 }
