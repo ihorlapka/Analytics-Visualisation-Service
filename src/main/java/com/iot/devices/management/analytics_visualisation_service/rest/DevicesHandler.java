@@ -42,12 +42,12 @@ import static reactor.core.publisher.Flux.fromIterable;
 @RequiredArgsConstructor
 public class DevicesHandler {
 
-    private static final String DEVICE_TYPE = "deviceType";
-    private static final String DEVICE_ID = "deviceId";
-    private static final String RATE = "rate";
-    private static final String FROM = "from";
-    private static final String TO = "to";
-    private static final String STATUS = "status";
+    static final String DEVICE_TYPE = "deviceType";
+    static final String DEVICE_ID = "deviceId";
+    static final String RATE = "rate";
+    static final String FROM = "from";
+    static final String TO = "to";
+    static final String STATUS = "status";
 
     private final AnalyticRegistry analyticRegistry;
     private final TelemetryStream telemetryStream;

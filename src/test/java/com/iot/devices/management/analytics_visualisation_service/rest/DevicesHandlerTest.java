@@ -5,9 +5,13 @@ import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.iot.devices.management.analytics_visualisation_service.analytics.*;
 import com.iot.devices.management.analytics_visualisation_service.analytics.model.EnergyMeterAnalytic;
 import com.iot.devices.management.analytics_visualisation_service.dto.EnergyMeterDto;
+import com.iot.devices.management.analytics_visualisation_service.persistence.enums.UserRole;
 import com.iot.devices.management.analytics_visualisation_service.persistence.mongo.cache.TelemetryCachingRepository;
 import com.iot.devices.management.analytics_visualisation_service.persistence.r2dbc.model.Device;
 import com.iot.devices.management.analytics_visualisation_service.persistence.r2dbc.repo.DeviceRepository;
+import com.iot.devices.management.analytics_visualisation_service.persistence.r2dbc.repo.TokenRepository;
+import com.iot.devices.management.analytics_visualisation_service.persistence.r2dbc.repo.UserRepository;
+import com.iot.devices.management.analytics_visualisation_service.security.*;
 import com.iot.devices.management.analytics_visualisation_service.stream.TelemetryStream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -18,6 +22,7 @@ import org.springframework.boot.autoconfigure.web.WebProperties;
 import org.springframework.boot.test.autoconfigure.web.reactive.WebFluxTest;
 import org.springframework.context.ApplicationContext;
 import org.springframework.dao.DataAccessResourceFailureException;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
@@ -33,10 +38,10 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
+import com.iot.devices.management.analytics_visualisation_service.persistence.r2dbc.model.User;
 
+import static com.iot.devices.management.analytics_visualisation_service.rest.DevicesHandler.*;
 import static com.iot.devices.management.analytics_visualisation_service.rest.GlobalErrorWebExceptionHandler.MESSAGE;
 import static com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceManufacturer.*;
 import static com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceStatus.*;
@@ -48,6 +53,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
+import static org.springframework.http.HttpHeaders.AUTHORIZATION;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 import static org.springframework.http.MediaType.TEXT_EVENT_STREAM;
 import static reactor.core.publisher.Flux.fromIterable;
@@ -59,11 +65,18 @@ import static reactor.core.publisher.Flux.fromIterable;
         DevicesHandler.class,
         GlobalErrorWebExceptionHandler.class,
         ThermostatAnalyticProvider.class,
-        WebProperties.Resources.class
+        WebProperties.Resources.class,
+        JwtSecurityProperties.class,
+        SecurityConfig.class,
+        JwtAuthenticationManager.class,
+        JwtServerAuthenticationConverter.class,
+        JwtService.class
 })
 class DevicesHandlerTest {
 
-    ObjectMapper objectMapper = new ObjectMapper();
+    private static final String JWT_TOKEN = "eyJhbGciOiJIUzM4NCJ9.eyJzdWIiOiJ0ZXN0VXNlciIsImlhdCI6MTc1OTY1MzE1NSwiZXhwIjoxNzU5NzM5NTU1fQ.s8zZoIpvOCf2ng7sZDTUz2uPDAsuzxRYFmy_bN_sgewiWEPuoOEPIYvAaZD9GGXt";
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Autowired
     ApplicationContext context;
@@ -75,8 +88,18 @@ class DevicesHandlerTest {
     TelemetryCachingRepository telemetryCachingRepository;
     @MockitoBean
     DeviceRepository deviceRepository;
+    @MockitoBean
+    UserRepository userRepository;
+    @MockitoBean
+    TokenRepository tokenRepository;
 
     WebTestClient webTestClient;
+
+    String username = "jonndoe123";
+    String passwordHash = "super_secret_password";
+
+    UUID USER_ID = UUID.randomUUID();
+    User USER = new User(USER_ID, username, passwordHash, UserRole.USER);
 
     @BeforeEach
     public void setUp() {
@@ -86,9 +109,11 @@ class DevicesHandlerTest {
 
     @AfterEach
     void tearDown() {
-        verifyNoMoreInteractions(telemetryCachingRepository, telemetryStream, analyticRegistry, deviceRepository);
+        verifyNoMoreInteractions(telemetryCachingRepository, telemetryStream, analyticRegistry,
+                deviceRepository, userRepository, tokenRepository);
     }
 
+    @WithMockUser
     @Test
     void badRequestHistory() {
         EnergyMeterDto energyMeterDto = new EnergyMeterDto(UUID.randomUUID(), 220f, 1.1f, 340f,
@@ -97,8 +122,14 @@ class DevicesHandlerTest {
         doReturn(Mono.just(energyMeterDto)).when(telemetryCachingRepository).getFromCacheOrDb(eq(energyMeterDto.deviceId()), any(Instant.class), any(Instant.class), eq(ENERGY_METER));
 
         webTestClient.get()
-                .uri("/api/v1/devices/" + energyMeterDto.getDeviceId() + "/history")
+                .uri(uriBuilder -> uriBuilder
+                        .path("/api/v1/devices/" + energyMeterDto.getDeviceId() + "/history")
+                        .queryParam(DEVICE_ID, energyMeterDto.deviceId())
+                        .queryParam(DEVICE_TYPE, ENERGY_METER.getId())
+                        .queryParam(FROM, "2025-08-17T13:19:00")
+                        .build())
                 .accept(APPLICATION_JSON)
+                .header(AUTHORIZATION, JWT_TOKEN)
                 .exchange()
                 .expectStatus().isBadRequest()
                 .expectBody(Map.class)
@@ -107,28 +138,56 @@ class DevicesHandlerTest {
                 });
     }
 
+    @WithMockUser(username = "jonndoe123")
     @Test
     void serverErrorHistory() {
         EnergyMeterDto energyMeterDto = new EnergyMeterDto(UUID.randomUUID(), 220f, 1.1f, 340f,
                 3000f, ONLINE, "asd", now().truncatedTo(MILLIS));
 
+        when(userRepository.findByDeviceId(energyMeterDto.deviceId())).thenReturn(Mono.just(USER));
         when(telemetryCachingRepository.getFromCacheOrDb(eq(energyMeterDto.deviceId()), any(Instant.class), any(Instant.class), eq(ENERGY_METER)))
                 .thenThrow(DataAccessResourceFailureException.class);
 
         webTestClient.get()
                 .uri(uriBuilder -> uriBuilder
                         .path("/api/v1/devices/{deviceId}/history")
-                        .queryParam("from", "2025-01-01T00:00")
-                        .queryParam("to", "2025-08-31T23:59:59")
-                        .queryParam("deviceType", ENERGY_METER.getId())
+                        .queryParam(FROM, "2025-01-01T00:00")
+                        .queryParam(TO, "2025-08-31T23:59:59")
+                        .queryParam(DEVICE_TYPE, ENERGY_METER.getId())
                         .build(energyMeterDto.deviceId()))
                 .accept(APPLICATION_JSON)
+                .header(AUTHORIZATION, JWT_TOKEN)
                 .exchange()
                 .expectStatus().is5xxServerError();
 
         verify(telemetryCachingRepository).getFromCacheOrDb(eq(energyMeterDto.deviceId()), any(Instant.class), any(Instant.class), eq(ENERGY_METER));
+        verify(userRepository).findByDeviceId(energyMeterDto.deviceId());
     }
 
+    @WithMockUser(username = "testUser")
+    @Test
+    void accessNotAllowedErrorHistory() {
+        EnergyMeterDto energyMeterDto = new EnergyMeterDto(UUID.randomUUID(), 220f, 1.1f, 340f,
+                3000f, ONLINE, "asd", now().truncatedTo(MILLIS));
+
+        when(userRepository.findByDeviceId(energyMeterDto.deviceId())).thenReturn(Mono.just(USER));
+
+        webTestClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/api/v1/devices/{deviceId}/history")
+                        .queryParam(FROM, "2025-01-01T00:00")
+                        .queryParam(TO, "2025-08-31T23:59:59")
+                        .queryParam(DEVICE_TYPE, ENERGY_METER.getId())
+                        .build(energyMeterDto.deviceId()))
+                .accept(APPLICATION_JSON)
+                .header(AUTHORIZATION, JWT_TOKEN)
+                .exchange()
+                .expectStatus().isForbidden();
+
+        verify(userRepository).findByDeviceId(energyMeterDto.deviceId());
+    }
+
+    @WithMockUser(username = "jonndoe123")
     @Test
     void isOkHistory() {
         UUID deviceId = UUID.randomUUID();
@@ -138,6 +197,7 @@ class DevicesHandlerTest {
         EnergyMeterDto energyMeterDto2 = new EnergyMeterDto(deviceId, 223f, 1.1f, 340f,
                 3049f, ONLINE, "asd", now().plus(5, SECONDS).truncatedTo(MILLIS));
 
+        when(userRepository.findByDeviceId(deviceId)).thenReturn(Mono.just(USER));
         doReturn(Mono.just(List.of(energyMeterDto1, energyMeterDto2))).when(telemetryCachingRepository).getFromCacheOrDb(eq(deviceId), any(Instant.class), any(Instant.class), eq(ENERGY_METER));
 
         webTestClient.get()
@@ -163,8 +223,10 @@ class DevicesHandlerTest {
                 });
 
         verify(telemetryCachingRepository).getFromCacheOrDb(eq(deviceId), any(Instant.class), any(Instant.class), eq(ENERGY_METER));
+        verify(userRepository).findByDeviceId(deviceId);
     }
 
+    @WithMockUser
     @Test
     void badRequestRealTime() {
         EnergyMeterDto energyMeterDto = new EnergyMeterDto(UUID.randomUUID(), 220f, 1.1f, 340f,
@@ -184,11 +246,13 @@ class DevicesHandlerTest {
                 });
     }
 
+    @WithMockUser(username = "jonndoe123")
     @Test
     void serverErrorRealTime() {
         EnergyMeterDto energyMeterDto = new EnergyMeterDto(UUID.randomUUID(), 220f, 1.1f, 340f,
                 3000f, ONLINE, "asd", now().truncatedTo(MILLIS));
 
+        when(userRepository.findByDeviceId(energyMeterDto.deviceId())).thenReturn(Mono.just(USER));
         when(telemetryStream.getStream(ENERGY_METER, energyMeterDto.deviceId()))
                 .thenThrow(NullPointerException.class);
 
@@ -204,14 +268,17 @@ class DevicesHandlerTest {
                 .expectStatus().is5xxServerError();
 
         verify(telemetryStream).getStream(ENERGY_METER, energyMeterDto.deviceId());
+        verify(userRepository).findByDeviceId(energyMeterDto.deviceId());
     }
 
+    @WithMockUser(username = "jonndoe123")
     @Test
     void isOkRealTime() {
         UUID deviceId = UUID.randomUUID();
         EnergyMeterDto energyMeterDto1 = new EnergyMeterDto(deviceId, 220f, 1.1f, 340f,
                 3000f, ONLINE, "asd", now().truncatedTo(MILLIS));
 
+        when(userRepository.findByDeviceId(deviceId)).thenReturn(Mono.just(USER));
         EnergyMeterDto energyMeterDto2 = new EnergyMeterDto(deviceId, 223f, 1.1f, 340f,
                 3049f, ONLINE, "asd", now().plus(5, SECONDS).truncatedTo(MILLIS));
 
@@ -236,8 +303,10 @@ class DevicesHandlerTest {
                 .verify();
 
         verify(telemetryStream).getStream(ENERGY_METER, deviceId);
+        verify(userRepository).findByDeviceId(deviceId);
     }
 
+    @WithMockUser(username = "jonndoe123")
     @Test
     void isOkHistoryWithRealTime() {
         UUID deviceId = UUID.randomUUID();
@@ -251,7 +320,7 @@ class DevicesHandlerTest {
                 null, ONLINE, "asd", now().truncatedTo(MILLIS));
 
         doReturn(Mono.just(List.of(energyMeterDto1, energyMeterDto2))).when(telemetryCachingRepository).getFromCacheOrDb(eq(deviceId), any(Instant.class), any(Instant.class), eq(ENERGY_METER));
-
+        when(userRepository.findByDeviceId(deviceId)).thenReturn(Mono.just(USER));
         when(telemetryStream.getStream(ENERGY_METER, deviceId))
                 .thenReturn(fromIterable(List.of(energyMeterDto3, energyMeterDto2)));
 
@@ -274,8 +343,10 @@ class DevicesHandlerTest {
 
         verify(telemetryStream).getStream(ENERGY_METER, deviceId);
         verify(telemetryCachingRepository).getFromCacheOrDb(eq(deviceId), any(Instant.class), any(Instant.class), eq(ENERGY_METER));
+        verify(userRepository).findByDeviceId(deviceId);
     }
 
+    @WithMockUser(username = "jonndoe123")
     @Test
     void isOkAnalytic() {
         UUID deviceId = UUID.randomUUID();
@@ -286,7 +357,7 @@ class DevicesHandlerTest {
                 4000f, ONLINE, "asd", now().plus(5, SECONDS).truncatedTo(MILLIS));
 
         doReturn(Mono.just(List.of(energyMeterDto1, energyMeterDto2))).when(telemetryCachingRepository).getFromCacheOrDb(eq(deviceId), any(Instant.class), any(Instant.class), eq(ENERGY_METER));
-
+        when(userRepository.findByDeviceId(deviceId)).thenReturn(Mono.just(USER));
         AnalyticProvider<EnergyMeterDto, EnergyMeterAnalytic> energyMeterAnalyticProvider = EnergyMeterAnalyticProvider.of();
         doReturn(energyMeterAnalyticProvider).when(analyticRegistry).getProvider(ENERGY_METER);
 
@@ -317,8 +388,10 @@ class DevicesHandlerTest {
 
         verify(telemetryCachingRepository).getFromCacheOrDb(eq(deviceId), any(Instant.class), any(Instant.class), eq(ENERGY_METER));
         verify(analyticRegistry).getProvider(ENERGY_METER);
+        verify(userRepository).findByDeviceId(deviceId);
     }
 
+    @WithMockUser(username = "admin", roles = "ADMIN")
     @Test
     void isOkDevicesPerManufacturer() {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS Z");
@@ -372,6 +445,7 @@ class DevicesHandlerTest {
         verify(deviceRepository).findAll();
     }
 
+    @WithMockUser(username = "admin", roles = "MANAGER")
     @Test
     void isOkStatuses() {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss.SSS Z");

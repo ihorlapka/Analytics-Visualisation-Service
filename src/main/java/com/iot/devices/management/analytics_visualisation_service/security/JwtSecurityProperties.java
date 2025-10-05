@@ -15,9 +15,9 @@ import org.springframework.context.annotation.Configuration;
 @Setter
 @ToString
 @Configuration
-@ConfigurationProperties(SecurityProperties.PROPERTIES_PREFIX)
+@ConfigurationProperties(JwtSecurityProperties.PROPERTIES_PREFIX)
 @RequiredArgsConstructor
-public class SecurityProperties {
+public class JwtSecurityProperties {
 
     final static String PROPERTIES_PREFIX = "security.jwt";
 

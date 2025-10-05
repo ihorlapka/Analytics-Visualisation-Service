@@ -18,7 +18,7 @@ import java.util.function.Function;
 @RequiredArgsConstructor
 public class JwtService {
 
-    private final SecurityProperties securityProperties;
+    private final JwtSecurityProperties securityProperties;
 
 
     public String extractUsername(String token) {

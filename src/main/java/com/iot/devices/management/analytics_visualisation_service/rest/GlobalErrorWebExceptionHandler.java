@@ -79,6 +79,7 @@ public class GlobalErrorWebExceptionHandler extends AbstractErrorWebExceptionHan
 
     private boolean isClientError(Throwable e) {
         return e instanceof DateTimeParseException
-                || e instanceof NoSuchElementException;
+                || e instanceof NoSuchElementException
+                || e instanceof IllegalArgumentException;
     }
 }
