@@ -32,6 +32,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.junit.jupiter.SpringExtension;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.MongoDBContainer;
+import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
 import reactor.core.publisher.Flux;
@@ -75,9 +76,11 @@ class TelemetryCachingRepositoryTest {
 
     private static final String DATABASE_NAME = "telemetry-events";
 
+    @Container
     static MongoDBContainer mongoDBContainer = new MongoDBContainer(DockerImageName.parse("mongo:7.0.23"))
             .withEnv("MONGO_INITDB_DATABASE", DATABASE_NAME);
 
+    @Container
     static GenericContainer<?> redisContainer = new GenericContainer<>(DockerImageName.parse("redis:latest"))
             .withExposedPorts(6379);
 
@@ -100,18 +103,6 @@ class TelemetryCachingRepositoryTest {
     ThermostatRepository thermostatRepository;
     @Autowired
     ReactiveMongoDatabaseFactory reactiveMongoDatabaseFactory;
-
-    @BeforeAll
-    static void start() {
-        mongoDBContainer.start();
-        redisContainer.start();
-    }
-
-    @AfterAll
-    static void close() {
-        mongoDBContainer.close();
-        redisContainer.close();
-    }
 
     @BeforeEach
     void createTimeSeriesCollectionIfNotExist() {

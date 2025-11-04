@@ -56,7 +56,7 @@ dependencies {
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 	implementation 'io.confluent:kafka-avro-serializer:7.9.2'
 	implementation 'io.swagger.core.v3:swagger-annotations:2.2.34'
-	implementation 'com.iot.devices.avro.schemas:avro-schemas:1.0.1-SNAPSHOT'
+	implementation 'com.iot.devices.avro.schemas:avro-schemas:1.0.3-SNAPSHOT'
 	implementation 'org.springdoc:springdoc-openapi-starter-webflux-api:2.8.8'
 	implementation 'org.springdoc:springdoc-openapi-starter-webflux-ui:2.8.8'
 	implementation 'org.springframework.boot:spring-boot-starter-cache:3.5.5'
