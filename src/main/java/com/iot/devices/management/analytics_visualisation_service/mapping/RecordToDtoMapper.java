@@ -1,9 +1,11 @@
 package com.iot.devices.management.analytics_visualisation_service.mapping;
 
+import com.iot.alerts.Alert;
 import com.iot.devices.*;
 import com.iot.devices.management.analytics_visualisation_service.dto.*;
 import com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceStatus;
 import com.iot.devices.management.analytics_visualisation_service.persistence.enums.DoorState;
+import com.iot.devices.management.analytics_visualisation_service.persistence.enums.SeverityLevel;
 import com.iot.devices.management.analytics_visualisation_service.persistence.enums.ThermostatMode;
 import lombok.experimental.UtilityClass;
 import org.apache.avro.specific.SpecificRecord;
@@ -132,5 +134,16 @@ public class RecordToDtoMapper {
                         .orElse(null),
                 sms.getFirmwareVersion(),
                 sms.getLastUpdated());
+    }
+
+    public static AlertDto mapToAlertDto(Alert alert) {
+        return new AlertDto(
+                UUID.fromString(alert.getAlertId()),
+                UUID.fromString(alert.getDeviceId()),
+                UUID.fromString(alert.getRuleId()),
+                SeverityLevel.valueOf(alert.getSeverity().name()),
+                alert.getTimestamp(),
+                alert.getMessage(),
+                alert.getActualValue());
     }
 }

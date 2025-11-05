@@ -3,6 +3,7 @@ package com.iot.devices.management.analytics_visualisation_service.mapping;
 import com.google.common.collect.ImmutableMap;
 import com.iot.devices.management.analytics_visualisation_service.dto.*;
 import com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceType;
+import com.iot.devices.management.analytics_visualisation_service.persistence.enums.SeverityLevel;
 import com.iot.devices.management.analytics_visualisation_service.persistence.mongo.model.*;
 import lombok.experimental.UtilityClass;
 
@@ -128,6 +129,16 @@ public class EventToDtoMapper {
                 sms.getStatus(),
                 sms.getFirmwareVersion(),
                 sms.getLastUpdated());
+    }
+
+    public static AlertDto mapToAlertDto(AlertEvent alertEvent) {
+        return new AlertDto(alertEvent.getAlertId(),
+                alertEvent.getDeviceId(),
+                alertEvent.getRuleId(),
+                SeverityLevel.valueOf(alertEvent.getSeverity().name()),
+                alertEvent.getTimestamp(),
+                alertEvent.getMessage(),
+                alertEvent.getActualValue());
     }
 
     @FunctionalInterface

@@ -7,11 +7,13 @@ import com.iot.devices.management.analytics_visualisation_service.analytics.mode
 import com.iot.devices.management.analytics_visualisation_service.dto.EnergyMeterDto;
 import com.iot.devices.management.analytics_visualisation_service.persistence.enums.UserRole;
 import com.iot.devices.management.analytics_visualisation_service.persistence.mongo.cache.TelemetryCachingRepository;
+import com.iot.devices.management.analytics_visualisation_service.persistence.mongo.repo.AlertsRepository;
 import com.iot.devices.management.analytics_visualisation_service.persistence.r2dbc.model.Device;
 import com.iot.devices.management.analytics_visualisation_service.persistence.r2dbc.repo.DeviceRepository;
 import com.iot.devices.management.analytics_visualisation_service.persistence.r2dbc.repo.TokenRepository;
 import com.iot.devices.management.analytics_visualisation_service.persistence.r2dbc.repo.UserRepository;
 import com.iot.devices.management.analytics_visualisation_service.security.*;
+import com.iot.devices.management.analytics_visualisation_service.stream.AlertStream;
 import com.iot.devices.management.analytics_visualisation_service.stream.TelemetryStream;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -92,6 +94,10 @@ class DevicesHandlerTest {
     UserRepository userRepository;
     @MockitoBean
     TokenRepository tokenRepository;
+    @MockitoBean
+    AlertsRepository alertsRepository;
+    @MockitoBean
+    AlertStream alertStream;
 
     WebTestClient webTestClient;
 

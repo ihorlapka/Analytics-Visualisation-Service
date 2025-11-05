@@ -1,5 +1,7 @@
 package com.iot.devices.management.analytics_visualisation_service.kafka;
 
+import com.iot.alerts.Alert;
+import com.iot.devices.management.analytics_visualisation_service.stream.AlertStream;
 import com.iot.devices.management.analytics_visualisation_service.stream.TelemetryStream;
 import io.micrometer.core.instrument.MeterRegistry;
 import jakarta.annotation.PostConstruct;
@@ -30,16 +32,18 @@ import static java.time.Duration.ofSeconds;
 public class ReactiveKafkaConsumerRunner {
 
     private final TelemetryStream telemetryStream;
+    private final AlertStream alertStream;
     private final KafkaConsumerProperties consumerProperties;
     private final AtomicBoolean kafkaConsumerStatusMonitor;
     private final ReactiveKafkaConsumerTemplate<String, SpecificRecord> consumerTemplate;
 
     private Disposable subscription;
 
-    public ReactiveKafkaConsumerRunner(KafkaConsumerProperties consumerProperties, TelemetryStream telemetryStream,
+    public ReactiveKafkaConsumerRunner(KafkaConsumerProperties consumerProperties, TelemetryStream telemetryStream, AlertStream alertStream,
                                        AtomicBoolean kafkaConsumerStatusMonitor, MeterRegistry meterRegistry) {
         this.consumerProperties = consumerProperties;
         this.telemetryStream = telemetryStream;
+        this.alertStream = alertStream;
         this.kafkaConsumerStatusMonitor = kafkaConsumerStatusMonitor;
         this.consumerTemplate = new ReactiveKafkaConsumerTemplate<>(createReceiverOptions(consumerProperties, meterRegistry));
     }
@@ -62,12 +66,20 @@ public class ReactiveKafkaConsumerRunner {
     }
 
     @PostConstruct
-    public void consumeRecord() {
+    public void startConsumer() {
         subscription = consumerTemplate.receive()
                 .limitRate(consumerProperties.getPollLimitRate())
-                .flatMap(record -> telemetryStream.publish(record.value())
-                        .doOnSuccess(ignored -> logAndAcknowledge(record))
-                        .onErrorResume(error -> logAndAcknowledgeIfNonRetriableError(record, error)))
+                .flatMap(record -> {
+                    if (record.value() instanceof Alert alert) {
+                        return alertStream.publish(alert)
+                                .doOnSuccess(ignored -> logAndAcknowledge(record))
+                                .onErrorResume(error -> logAndAcknowledgeIfNonRetriableError(record, error));
+                    } else {
+                        return telemetryStream.publish(record.value())
+                                .doOnSuccess(ignored -> logAndAcknowledge(record))
+                                .onErrorResume(error -> logAndAcknowledgeIfNonRetriableError(record, error));
+                    }
+                })
                 .doOnError(error -> log.error("Consumer error: {}", error.getMessage()))
                 .retryWhen(Retry.backoff(MAX_VALUE, ofSeconds(consumerProperties.getBackoffTimeSeconds()))
                         .maxBackoff(ofSeconds(consumerProperties.getMaxBackoffTimeSeconds())))

@@ -11,6 +11,7 @@ import com.iot.devices.management.analytics_visualisation_service.kafka.producer
 import com.iot.devices.management.analytics_visualisation_service.metrics.KpiMetricLogger;
 import com.iot.devices.management.analytics_visualisation_service.persistence.mongo.cache.TelemetryCachingRepository;
 import com.iot.devices.management.analytics_visualisation_service.persistence.mongo.services.TelemetryService;
+import com.iot.devices.management.analytics_visualisation_service.stream.AlertStream;
 import com.iot.devices.management.analytics_visualisation_service.stream.TelemetryStream;
 import io.micrometer.core.instrument.MockClock;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
@@ -49,6 +50,7 @@ import static org.mockito.Mockito.*;
         classes = {
                 ReactiveKafkaConsumerRunner.class,
                 TelemetryStream.class,
+                AlertStream.class,
                 KafkaConsumerConfig.class,
                 TestKafkaProducer.class,
                 KafkaProducerProperties.class,
@@ -99,7 +101,7 @@ public class ReactiveKafkaConsumerRunnerTest {
 
     @BeforeEach
     void startConsumer() {
-        reactiveKafkaConsumerRunner.consumeRecord();
+        reactiveKafkaConsumerRunner.startConsumer();
     }
 
     @AfterEach

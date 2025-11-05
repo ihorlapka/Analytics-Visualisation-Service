@@ -14,18 +14,20 @@ import static org.springframework.web.reactive.function.server.RouterFunctions.r
 @Configuration
 public class TelemetriesRouterFunction {
 
-    //TODO: add alerts endpoints!
-
     @Bean
     @RouterFunctionOpenApi
     public RouterFunction<ServerResponse> deviceRouterFunction(DevicesHandler deviceHandler) {
         return route()
                 .nest(path("/api/v1/devices/{deviceId}"), builder ->
-                        builder.GET("/history", deviceHandler::getHistory)
+                        builder.GET("/history", deviceHandler::getTelemetryHistory)
                                 .GET("/realTime", deviceHandler::getRealTimeTelemetry)
-                                .GET("/historyWithRealTime", deviceHandler::getHistoryWithRealTimeData)
+                                .GET("/historyWithRealTime", deviceHandler::getTelemetryHistoryWithRealTimeData)
                                 .GET("/analytics", deviceHandler::getAnalytics)
-                                .GET("/lastTelemetry", deviceHandler::getLastTelemetry))
+                                .GET("/lastTelemetry", deviceHandler::getLastTelemetry)
+                                .GET("/alertHistory", deviceHandler::getAlertsHistory)
+                                .GET("/realTimeAlerts", deviceHandler::getRealTimeAlerts)
+                                .GET("/historyWithRealTimeAlerts", deviceHandler::getHistoryWithRealTimeAlerts)
+                                .GET("/lastAlert", deviceHandler::getLastAlert))
                 .build()
                 .and(route()
                         .nest(path("api/v1"), builder ->

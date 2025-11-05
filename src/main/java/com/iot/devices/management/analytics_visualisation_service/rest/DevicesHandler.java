@@ -1,25 +1,30 @@
 package com.iot.devices.management.analytics_visualisation_service.rest;
 
 import com.iot.devices.management.analytics_visualisation_service.analytics.AnalyticRegistry;
+import com.iot.devices.management.analytics_visualisation_service.dto.AlertDto;
 import com.iot.devices.management.analytics_visualisation_service.dto.TelemetryDto;
+import com.iot.devices.management.analytics_visualisation_service.mapping.EventToDtoMapper;
 import com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceStatus;
 import com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceType;
 import com.iot.devices.management.analytics_visualisation_service.persistence.enums.UserRole;
 import com.iot.devices.management.analytics_visualisation_service.persistence.mongo.cache.TelemetryCachingRepository;
+import com.iot.devices.management.analytics_visualisation_service.persistence.mongo.repo.AlertsRepository;
 import com.iot.devices.management.analytics_visualisation_service.persistence.r2dbc.model.Device;
 import com.iot.devices.management.analytics_visualisation_service.persistence.r2dbc.repo.DeviceRepository;
 import com.iot.devices.management.analytics_visualisation_service.persistence.r2dbc.repo.UserRepository;
 import com.iot.devices.management.analytics_visualisation_service.security.AccessNotAllowed;
+import com.iot.devices.management.analytics_visualisation_service.stream.AlertStream;
 import com.iot.devices.management.analytics_visualisation_service.stream.TelemetryStream;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.server.ServerRequest;
 import org.springframework.web.reactive.function.server.ServerResponse;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
 import reactor.util.function.Tuple3;
 import reactor.util.function.Tuple4;
 
@@ -38,7 +43,7 @@ import static java.util.stream.Collectors.counting;
 import static org.springframework.http.MediaType.TEXT_EVENT_STREAM;
 import static reactor.core.publisher.Flux.fromIterable;
 
-@Component
+@Service
 @RequiredArgsConstructor
 public class DevicesHandler {
 
@@ -54,8 +59,10 @@ public class DevicesHandler {
     private final DeviceRepository deviceRepository;
     private final TelemetryCachingRepository telemetryCachingRepository;
     private final UserRepository userRepository;
+    private final AlertsRepository alertsRepository;
+    private final AlertStream alertStream;
 
-    public Mono<ServerResponse> getHistory(ServerRequest request) {
+    public Mono<ServerResponse> getTelemetryHistory(ServerRequest request) {
         return Mono.zip(getId(request), getInstant(request, FROM), getInstant(request, TO), getDeviceType(request), request.principal())
                 .filterWhen(tuple ->  hasPermission(tuple.getT5(), tuple.getT1()))
                 .flatMap(this::getTelemetriesMonoList)
@@ -68,16 +75,16 @@ public class DevicesHandler {
                 .filterWhen(tuple ->  hasPermission(tuple.getT4(), tuple.getT1()))
                 .flatMap(tuple -> ServerResponse.ok()
                         .contentType(TEXT_EVENT_STREAM)
-                        .body(getRealTimeData(tuple), TelemetryDto.class))
+                        .body(getTelemetryRealTimeData(tuple), TelemetryDto.class))
                 .switchIfEmpty(Mono.error(new AccessNotAllowed("Permission denied to resource")));
     }
 
-    public Mono<ServerResponse> getHistoryWithRealTimeData(ServerRequest request) {
+    public Mono<ServerResponse> getTelemetryHistoryWithRealTimeData(ServerRequest request) {
         return Mono.zip(getId(request), getInstant(request, FROM), Mono.just(Instant.now()), getDeviceType(request), request.principal())
                 .filterWhen(tuple ->  hasPermission(tuple.getT5(), tuple.getT1()))
                 .flatMap(tuple -> ServerResponse.ok()
                         .contentType(TEXT_EVENT_STREAM)
-                        .body(combineHistoryAndRealTimeData(tuple), TelemetryDto.class))
+                        .body(combineTelemetryHistoryAndRealTimeData(tuple), TelemetryDto.class))
                 .switchIfEmpty(Mono.error(new AccessNotAllowed("Permission denied to resource")));
     }
 
@@ -116,6 +123,40 @@ public class DevicesHandler {
                 .flatMap(result -> ServerResponse.ok().body(BodyInserters.fromValue(result)));
     }
 
+    public Mono<ServerResponse> getAlertsHistory(ServerRequest request) {
+        return Mono.zip(getId(request), getInstant(request, FROM), getInstant(request, TO), request.principal())
+                .filterWhen(tuple ->  hasPermission(tuple.getT4(), tuple.getT1()))
+                .flatMap(this::getAlertsMonoList)
+                .flatMap(dtoList -> ServerResponse.ok().body(BodyInserters.fromValue(dtoList)))
+                .switchIfEmpty(Mono.error(new AccessNotAllowed("Permission denied to resource")));
+    }
+
+    public Mono<ServerResponse> getRealTimeAlerts(ServerRequest request) {
+        return Mono.zip(getId(request), getRate(request), request.principal())
+                .filterWhen(tuple ->  hasPermission(tuple.getT3(), tuple.getT1()))
+                .flatMap(tuple -> ServerResponse.ok()
+                        .contentType(TEXT_EVENT_STREAM)
+                        .body(getAlertRealTimeData(tuple), AlertDto.class))
+                .switchIfEmpty(Mono.error(new AccessNotAllowed("Permission denied to resource")));
+    }
+
+    public Mono<ServerResponse> getHistoryWithRealTimeAlerts(ServerRequest request) {
+        return Mono.zip(getId(request), getInstant(request, FROM), Mono.just(Instant.now()), request.principal())
+                .filterWhen(tuple ->  hasPermission(tuple.getT4(), tuple.getT1()))
+                .flatMap(tuple -> ServerResponse.ok()
+                        .contentType(TEXT_EVENT_STREAM)
+                        .body(combineAlertsHistoryAndRealTimeData(tuple), AlertDto.class))
+                .switchIfEmpty(Mono.error(new AccessNotAllowed("Permission denied to resource")));
+    }
+
+    public Mono<ServerResponse> getLastAlert(ServerRequest request) {
+        return Mono.zip(getId(request), getDeviceType(request), request.principal())
+                .filterWhen(tuple ->  hasPermission(tuple.getT3(), tuple.getT1()))
+                .flatMap(tuple -> alertsRepository.findFirstByDeviceIdOrderByTimestampDesc(tuple.getT1()))
+                .flatMap(result -> ServerResponse.ok().body(BodyInserters.fromValue(result)))
+                .switchIfEmpty(Mono.error(new AccessNotAllowed("Permission denied to resource")));
+    }
+
     private Mono<Instant> getInstant(ServerRequest request, String period) {
         return Mono.justOrEmpty(request.queryParam(period))
                 .map(LocalDateTime::parse)
@@ -145,15 +186,29 @@ public class DevicesHandler {
         return telemetryCachingRepository.getFromCacheOrDb(tuple.getT1(), tuple.getT2(), tuple.getT3(), tuple.getT4());
     }
 
-    private Flux<TelemetryDto> getRealTimeData(Tuple3<UUID, Integer, DeviceType> tuple) {
-        return telemetryStream.getStream(tuple.getT3(), tuple.getT1())
-                .limitRate(tuple.getT2());
+    private Flux<TelemetryDto> getTelemetryRealTimeData(Tuple3<UUID, Integer, DeviceType> tuple) {
+        return telemetryStream.getStream(tuple.getT3(), tuple.getT1()).limitRate(tuple.getT2());
     }
 
-    private Flux<TelemetryDto> combineHistoryAndRealTimeData(Tuple4<UUID, Instant, Instant, DeviceType> tuple) {
+    private Flux<TelemetryDto> combineTelemetryHistoryAndRealTimeData(Tuple4<UUID, Instant, Instant, DeviceType> tuple) {
         return getTelemetriesMonoList(tuple)
-                .flatMapMany(history -> fromIterable(history)
-                        .concatWith(telemetryStream.getStream(tuple.getT4(), tuple.getT1())))
+                .flatMapMany(history -> fromIterable(history).concatWith(telemetryStream.getStream(tuple.getT4(), tuple.getT1())))
+                .distinct();
+    }
+
+    private <P extends Principal> Mono<List<AlertDto>> getAlertsMonoList(Tuple4<UUID, Instant, Instant, P> tuple) {
+        return alertsRepository.findByDeviceIdAndTimestampBetween(tuple.getT1(), tuple.getT2(), tuple.getT3())
+                .map(EventToDtoMapper::mapToAlertDto)
+                .collectList();
+    }
+
+    private Flux<AlertDto> getAlertRealTimeData(Tuple2<UUID, Integer> tuple) {
+        return alertStream.getStream(tuple.getT1()).limitRate(tuple.getT2());
+    }
+
+    private <P extends Principal> Flux<AlertDto> combineAlertsHistoryAndRealTimeData(Tuple4<UUID, Instant, Instant, P> tuple) {
+        return getAlertsMonoList(tuple)
+                .flatMapMany(history -> fromIterable(history).concatWith(alertStream.getStream(tuple.getT1())))
                 .distinct();
     }
 
