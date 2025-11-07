@@ -57,7 +57,7 @@ kafka:
       max.poll.interval: 300000
       fetch.min.bytes: 128
       fetch.max.wait.ms: 5000
-      value.subject.name.strategy: io.confluent.kafka.serializers.subject.TopicRecordNameStrategy
+      value.subject.name.strategy: io.confluent.kafka.serializers.subject.RecordNameStrategy
   producer:
     topic: iot-devices-data
     properties:

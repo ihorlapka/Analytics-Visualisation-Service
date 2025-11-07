@@ -4,9 +4,11 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.iot.devices.management.analytics_visualisation_service.analytics.*;
 import com.iot.devices.management.analytics_visualisation_service.analytics.model.EnergyMeterAnalytic;
+import com.iot.devices.management.analytics_visualisation_service.dto.AlertDto;
 import com.iot.devices.management.analytics_visualisation_service.dto.EnergyMeterDto;
 import com.iot.devices.management.analytics_visualisation_service.persistence.enums.UserRole;
 import com.iot.devices.management.analytics_visualisation_service.persistence.mongo.cache.TelemetryCachingRepository;
+import com.iot.devices.management.analytics_visualisation_service.persistence.mongo.model.AlertEvent;
 import com.iot.devices.management.analytics_visualisation_service.persistence.mongo.repo.AlertsRepository;
 import com.iot.devices.management.analytics_visualisation_service.persistence.r2dbc.model.Device;
 import com.iot.devices.management.analytics_visualisation_service.persistence.r2dbc.repo.DeviceRepository;
@@ -43,6 +45,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import com.iot.devices.management.analytics_visualisation_service.persistence.r2dbc.model.User;
 
+import static com.iot.devices.management.analytics_visualisation_service.mapping.EventToDtoMapper.mapToAlertDto;
+import static com.iot.devices.management.analytics_visualisation_service.persistence.enums.SeverityLevel.CRITICAL;
+import static com.iot.devices.management.analytics_visualisation_service.persistence.enums.SeverityLevel.WARNING;
 import static com.iot.devices.management.analytics_visualisation_service.rest.DevicesHandler.*;
 import static com.iot.devices.management.analytics_visualisation_service.rest.GlobalErrorWebExceptionHandler.MESSAGE;
 import static com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceManufacturer.*;
@@ -116,7 +121,7 @@ class DevicesHandlerTest {
     @AfterEach
     void tearDown() {
         verifyNoMoreInteractions(telemetryCachingRepository, telemetryStream, analyticRegistry,
-                deviceRepository, userRepository, tokenRepository);
+                deviceRepository, userRepository, tokenRepository, alertsRepository, alertStream);
     }
 
     @WithMockUser
@@ -504,5 +509,165 @@ class DevicesHandlerTest {
                 });
 
         verify(deviceRepository).findAll();
+    }
+
+    @WithMockUser(username = "jonndoe123")
+    @Test
+    void isOkAlertHistory() {
+        UUID deviceId = UUID.randomUUID();
+
+        AlertEvent alert1 = AlertEvent.builder()
+                .alertId(UUID.randomUUID())
+                .deviceId(deviceId)
+                .ruleId(UUID.randomUUID())
+                .timestamp(now())
+                .actualValue(10f)
+                .severity(WARNING)
+                .message("some message1")
+                .build();
+
+        AlertEvent alert2 = AlertEvent.builder()
+                .alertId(UUID.randomUUID())
+                .deviceId(deviceId)
+                .ruleId(UUID.randomUUID())
+                .timestamp(now())
+                .actualValue(37f)
+                .severity(CRITICAL)
+                .message("some message2")
+                .build();
+
+        when(userRepository.findByDeviceId(deviceId)).thenReturn(Mono.just(USER));
+        doReturn(Flux.just(alert1, alert2)).when(alertsRepository).findByDeviceIdAndTimestampBetween(eq(deviceId), any(Instant.class), any(Instant.class));
+
+        webTestClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/api/v1/devices/{deviceId}/alertsHistory")
+                        .queryParam("from", "2025-01-01T00:00")
+                        .queryParam("to", "2025-08-31T23:59")
+                        .build(deviceId))
+                .accept(APPLICATION_JSON)
+                .exchange()
+                .expectStatus().isOk()
+                .expectBody(String.class)
+                .value(response -> {
+                    try {
+                        List<AlertDto> list = objectMapper.readValue(response, new TypeReference<>() {});
+                        assertThat(list.getFirst()).isEqualTo(mapToAlertDto(alert1));
+                        assertThat(list.get(1)).isEqualTo(mapToAlertDto(alert2));
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+
+        verify(alertsRepository).findByDeviceIdAndTimestampBetween(eq(deviceId), any(Instant.class), any(Instant.class));
+        verify(userRepository).findByDeviceId(deviceId);
+    }
+
+    @WithMockUser(username = "jonndoe123")
+    @Test
+    void isOkAlertsRealTime() {
+        UUID deviceId = UUID.randomUUID();
+
+        AlertEvent alert1 = AlertEvent.builder()
+                .alertId(UUID.randomUUID())
+                .deviceId(deviceId)
+                .ruleId(UUID.randomUUID())
+                .timestamp(now())
+                .actualValue(10f)
+                .severity(WARNING)
+                .message("some message1")
+                .build();
+
+        AlertEvent alert2 = AlertEvent.builder()
+                .alertId(UUID.randomUUID())
+                .deviceId(deviceId)
+                .ruleId(UUID.randomUUID())
+                .timestamp(now())
+                .actualValue(37f)
+                .severity(CRITICAL)
+                .message("some message2")
+                .build();
+
+        when(userRepository.findByDeviceId(deviceId)).thenReturn(Mono.just(USER));
+        when(alertStream.getStream(deviceId)).thenReturn(Flux.just(mapToAlertDto(alert1), mapToAlertDto(alert2)));
+
+        Flux<AlertDto> flux = webTestClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/api/v1/devices/{deviceId}/realTimeAlerts")
+                        .queryParam("from", "2025-01-01T00:00:00")
+                        .queryParam("rate", 10)
+                        .build(deviceId))
+                .accept(TEXT_EVENT_STREAM)
+                .exchange()
+                .returnResult(AlertDto.class)
+                .getResponseBody();
+
+        StepVerifier.create(flux)
+                .expectNextMatches(dto -> dto.deviceId().equals(deviceId))
+                .expectNextCount(1)
+                .thenCancel()
+                .verify();
+
+        verify(alertStream).getStream(deviceId);
+        verify(userRepository).findByDeviceId(deviceId);
+    }
+
+    @WithMockUser(username = "jonndoe123")
+    @Test
+    void isOkAlertsHistoryWithRealTime() {
+        UUID deviceId = UUID.randomUUID();
+        AlertEvent alert1 = AlertEvent.builder()
+                .alertId(UUID.randomUUID())
+                .deviceId(deviceId)
+                .ruleId(UUID.randomUUID())
+                .timestamp(now())
+                .actualValue(10f)
+                .severity(WARNING)
+                .message("some message1")
+                .build();
+
+        AlertEvent alert2 = AlertEvent.builder()
+                .alertId(UUID.randomUUID())
+                .deviceId(deviceId)
+                .ruleId(UUID.randomUUID())
+                .timestamp(now())
+                .actualValue(37f)
+                .severity(CRITICAL)
+                .message("some message2")
+                .build();
+
+        AlertEvent alert3 = AlertEvent.builder()
+                .alertId(UUID.randomUUID())
+                .deviceId(deviceId)
+                .ruleId(UUID.randomUUID())
+                .timestamp(now())
+                .actualValue(37f)
+                .severity(CRITICAL)
+                .message("some message2")
+                .build();
+
+        doReturn(Flux.just(alert1, alert2)).when(alertsRepository).findByDeviceIdAndTimestampBetween(eq(deviceId), any(Instant.class), any(Instant.class));
+        when(userRepository.findByDeviceId(deviceId)).thenReturn(Mono.just(USER));
+        when(alertStream.getStream(deviceId)).thenReturn(Flux.just(mapToAlertDto(alert3), mapToAlertDto(alert2)));
+
+        Flux<AlertDto> flux = webTestClient.get()
+                .uri(uriBuilder -> uriBuilder
+                        .path("/api/v1/devices/{deviceId}/historyWithRealTimeAlerts")
+                        .queryParam("from", "2025-01-01T00:00:00")
+                        .build(deviceId))
+                .accept(TEXT_EVENT_STREAM)
+                .exchange()
+                .returnResult(AlertDto.class)
+                .getResponseBody();
+
+        StepVerifier.create(flux)
+                .expectNextMatches(dto -> dto.deviceId().equals(deviceId))
+                .expectNextCount(2)
+                .thenCancel()
+                .verify();
+
+        verify(alertStream).getStream(deviceId);
+        verify(alertsRepository).findByDeviceIdAndTimestampBetween(eq(deviceId), any(Instant.class), any(Instant.class));
+        verify(userRepository).findByDeviceId(deviceId);
     }
 }

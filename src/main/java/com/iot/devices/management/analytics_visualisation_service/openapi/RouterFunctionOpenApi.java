@@ -108,12 +108,12 @@ import static org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE;
                                                         summary = "Request is invalid",
                                                         value = """
                                                                 {
-                                                                "timestamp":"2025-09-04T13:22:11.864+00:00",
-                                                                "path":"/api/v1/devices/0752023b-57a3-4665-a842-b4da71aefcdc/history",
-                                                                "status":400,
-                                                                "error":"Client Error",
-                                                                "requestId":"585c9d89",
-                                                                "message":"Some params in request are not set properly!"
+                                                                  "timestamp":"2025-09-04T13:22:11.864+00:00",
+                                                                  "path":"/api/v1/devices/0752023b-57a3-4665-a842-b4da71aefcdc/history",
+                                                                  "status":400,
+                                                                  "error":"Client Error",
+                                                                  "requestId":"585c9d89",
+                                                                  "message":"Some params in request are not set properly!"
                                                                 }
                                                                 """
                                                 )
@@ -130,11 +130,11 @@ import static org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE;
                                                         summary = "Server is down",
                                                         value = """
                                                                 {
-                                                                "timestamp":"2025-09-04T13:19:57.120+00:00",
-                                                                "path":"/api/v1/devices/3dd253d3-901d-4f80-a240-2c8b983f0ee4/history",
-                                                                "status":500,
-                                                                "error":"Internal Server Error",
-                                                                "requestId":"5f60ed6"
+                                                                  "timestamp":"2025-09-04T13:19:57.120+00:00",
+                                                                  "path":"/api/v1/devices/3dd253d3-901d-4f80-a240-2c8b983f0ee4/history",
+                                                                  "status":500,
+                                                                  "error":"Internal Server Error",
+                                                                  "requestId":"5f60ed6"
                                                                 }
                                                                 """
                                                 )
@@ -192,14 +192,14 @@ import static org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE;
                                                         summary = "Energy Meter telemetries stream",
                                                         value = """
                                                                 {
-                                                                    "deviceId": "cd6e4534-7e64-4fc0-8321-8db428de9743",
-                                                                    "voltage": 230.0,
-                                                                    "current": 4.0,
-                                                                    "power": 800.0,
-                                                                    "energyConsumed": 0.0,
-                                                                    "status": "ONLINE",
-                                                                    "firmwareVersion": "2.1",
-                                                                    "lastUpdated": "2025-09-04T15:55:45.197Z"
+                                                                  "deviceId": "cd6e4534-7e64-4fc0-8321-8db428de9743",
+                                                                  "voltage": 230.0,
+                                                                  "current": 4.0,
+                                                                  "power": 800.0,
+                                                                  "energyConsumed": 0.0,
+                                                                  "status": "ONLINE",
+                                                                  "firmwareVersion": "2.1",
+                                                                  "lastUpdated": "2025-09-04T15:55:45.197Z"
                                                                 }
                                                                 """
                                                 )
@@ -216,12 +216,12 @@ import static org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE;
                                                         summary = "Request is invalid",
                                                         value = """
                                                                 {
-                                                                "timestamp":"2025-09-04T13:22:11.864+00:00",
-                                                                "path":"/api/v1/devices/0752023b-57a3-4665-a842-b4da71aefcdc/realTime",
-                                                                "status":400,
-                                                                "error":"Client Error",
-                                                                "requestId":"585c9d89",
-                                                                "message":"Some params in request are not set properly!"
+                                                                  "timestamp":"2025-09-04T13:22:11.864+00:00",
+                                                                  "path":"/api/v1/devices/0752023b-57a3-4665-a842-b4da71aefcdc/realTime",
+                                                                  "status":400,
+                                                                  "error":"Client Error",
+                                                                  "requestId":"585c9d89",
+                                                                  "message":"Some params in request are not set properly!"
                                                                 }
                                                                 """
                                                 )
@@ -238,11 +238,11 @@ import static org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE;
                                                         summary = "Server is down",
                                                         value = """
                                                                 {
-                                                                "timestamp":"2025-09-04T13:19:57.120+00:00",
-                                                                "path":"/api/v1/devices/3dd253d3-901d-4f80-a240-2c8b983f0ee4/realTime",
-                                                                "status":500,
-                                                                "error":"Internal Server Error",
-                                                                "requestId":"5f60ed6"
+                                                                  "timestamp":"2025-09-04T13:19:57.120+00:00",
+                                                                  "path":"/api/v1/devices/3dd253d3-901d-4f80-a240-2c8b983f0ee4/realTime",
+                                                                  "status":500,
+                                                                  "error":"Internal Server Error",
+                                                                  "requestId":"5f60ed6"
                                                                 }
                                                                 """
                                                 )
@@ -300,14 +300,14 @@ import static org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE;
                                                         summary = "Energy Meter telemetries stream",
                                                         value = """
                                                                 {
-                                                                    "deviceId": "cd6e4534-7e64-4fc0-8321-8db428de9743",
-                                                                    "voltage": 230.0,
-                                                                    "current": 4.0,
-                                                                    "power": 800.0,
-                                                                    "energyConsumed": 0.0,
-                                                                    "status": "ONLINE",
-                                                                    "firmwareVersion": "2.1",
-                                                                    "lastUpdated": "2025-09-04T15:55:45.197Z"
+                                                                  "deviceId": "cd6e4534-7e64-4fc0-8321-8db428de9743",
+                                                                  "voltage": 230.0,
+                                                                  "current": 4.0,
+                                                                  "power": 800.0,
+                                                                  "energyConsumed": 0.0,
+                                                                  "status": "ONLINE",
+                                                                  "firmwareVersion": "2.1",
+                                                                  "lastUpdated": "2025-09-04T15:55:45.197Z"
                                                                 }
                                                                 """
                                                 )
@@ -324,12 +324,12 @@ import static org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE;
                                                         summary = "Request is invalid",
                                                         value = """
                                                                 {
-                                                                "timestamp":"2025-09-04T13:22:11.864+00:00",
-                                                                "path":"/api/v1/devices/0752023b-57a3-4665-a842-b4da71aefcdc/historyWithRealTime",
-                                                                "status":400,
-                                                                "error":"Client Error",
-                                                                "requestId":"585c9d89",
-                                                                "message":"Some params in request are not set properly!"
+                                                                  "timestamp":"2025-09-04T13:22:11.864+00:00",
+                                                                  "path":"/api/v1/devices/0752023b-57a3-4665-a842-b4da71aefcdc/historyWithRealTime",
+                                                                  "status":400,
+                                                                  "error":"Client Error",
+                                                                  "requestId":"585c9d89",
+                                                                  "message":"Some params in request are not set properly!"
                                                                 }
                                                                 """
                                                 )
@@ -346,11 +346,11 @@ import static org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE;
                                                         summary = "Server is down",
                                                         value = """
                                                                 {
-                                                                "timestamp":"2025-09-04T13:19:57.120+00:00",
-                                                                "path":"/api/v1/devices/3dd253d3-901d-4f80-a240-2c8b983f0ee4/historyWithRealTime",
-                                                                "status":500,
-                                                                "error":"Internal Server Error",
-                                                                "requestId":"5f60ed6"
+                                                                  "timestamp":"2025-09-04T13:19:57.120+00:00",
+                                                                  "path":"/api/v1/devices/3dd253d3-901d-4f80-a240-2c8b983f0ee4/historyWithRealTime",
+                                                                  "status":500,
+                                                                  "error":"Internal Server Error",
+                                                                  "requestId":"5f60ed6"
                                                                 }
                                                                 """
                                                 )
@@ -437,12 +437,12 @@ import static org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE;
                                                         summary = "Request is invalid",
                                                         value = """
                                                                 {
-                                                                "timestamp":"2025-09-04T13:22:11.864+00:00",
-                                                                "path":"/api/v1/devices/0752023b-57a3-4665-a842-b4da71aefcdc/analytics",
-                                                                "status":400,
-                                                                "error":"Client Error",
-                                                                "requestId":"585c9d89",
-                                                                "message":"Some params in request are not set properly!"
+                                                                  "timestamp":"2025-09-04T13:22:11.864+00:00",
+                                                                  "path":"/api/v1/devices/0752023b-57a3-4665-a842-b4da71aefcdc/analytics",
+                                                                  "status":400,
+                                                                  "error":"Client Error",
+                                                                  "requestId":"585c9d89",
+                                                                  "message":"Some params in request are not set properly!"
                                                                 }
                                                                 """
                                                 )
@@ -459,11 +459,11 @@ import static org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE;
                                                         summary = "Server is down",
                                                         value = """
                                                                 {
-                                                                "timestamp":"2025-09-04T13:19:57.120+00:00",
-                                                                "path":"/api/v1/devices/3dd253d3-901d-4f80-a240-2c8b983f0ee4/analytics",
-                                                                "status":500,
-                                                                "error":"Internal Server Error",
-                                                                "requestId":"5f60ed6"
+                                                                  "timestamp":"2025-09-04T13:19:57.120+00:00",
+                                                                  "path":"/api/v1/devices/3dd253d3-901d-4f80-a240-2c8b983f0ee4/analytics",
+                                                                  "status":500,
+                                                                  "error":"Internal Server Error",
+                                                                  "requestId":"5f60ed6"
                                                                 }
                                                                 """
                                                 )
@@ -487,16 +487,16 @@ import static org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE;
                                                         summary = "The amount of devices per manufacturer",
                                                         value = """
                                                                 {
-                                                                    "BOSCH": 8,
-                                                                    "SIEMENS": 8,
-                                                                    "CISCO_SYSTEMS": 12,
-                                                                    "SAMSUNG": 10,
-                                                                    "FITBIT": 8,
-                                                                    "AMAZON": 13,
-                                                                    "PHILIPS_HUE": 9,
-                                                                    "HONEYWELL": 8,
-                                                                    "SCHNEIDER_ELECTRIC": 8,
-                                                                    "TEXAS_INSTRUMENTS": 6
+                                                                  "BOSCH": 8,
+                                                                  "SIEMENS": 8,
+                                                                  "CISCO_SYSTEMS": 12,
+                                                                  "SAMSUNG": 10,
+                                                                  "FITBIT": 8,
+                                                                  "AMAZON": 13,
+                                                                  "PHILIPS_HUE": 9,
+                                                                  "HONEYWELL": 8,
+                                                                  "SCHNEIDER_ELECTRIC": 8,
+                                                                  "TEXAS_INSTRUMENTS": 6
                                                                 }
                                                                 """
                                                 )
@@ -513,12 +513,12 @@ import static org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE;
                                                         summary = "Request is invalid",
                                                         value = """
                                                                 {
-                                                                "timestamp":"2025-09-04T13:22:11.864+00:00",
-                                                                "path":"/api/v1/devicesPerManufacturer",
-                                                                "status":400,
-                                                                "error":"Client Error",
-                                                                "requestId":"585c9d89",
-                                                                "message":"Some params in request are not set properly!"
+                                                                  "timestamp":"2025-09-04T13:22:11.864+00:00",
+                                                                  "path":"/api/v1/devicesPerManufacturer",
+                                                                  "status":400,
+                                                                  "error":"Client Error",
+                                                                  "requestId":"585c9d89",
+                                                                  "message":"Some params in request are not set properly!"
                                                                 }
                                                                 """
                                                 )
@@ -535,11 +535,11 @@ import static org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE;
                                                         summary = "Server is down",
                                                         value = """
                                                                 {
-                                                                "timestamp":"2025-09-04T13:19:57.120+00:00",
-                                                                "path":"/api/v1/devicesPerManufacturer",
-                                                                "status":500,
-                                                                "error":"Internal Server Error",
-                                                                "requestId":"5f60ed6"
+                                                                  "timestamp":"2025-09-04T13:19:57.120+00:00",
+                                                                  "path":"/api/v1/devicesPerManufacturer",
+                                                                  "status":500,
+                                                                  "error":"Internal Server Error",
+                                                                  "requestId":"5f60ed6"
                                                                 }
                                                                 """
                                                 )
@@ -564,8 +564,8 @@ import static org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE;
                                                         summary = "The number of devices with desired status",
                                                         value = """
                                                                 {
-                                                                    "CISCO_SYSTEMS": 1,
-                                                                    "PHILIPS_HUE": 1
+                                                                  "CISCO_SYSTEMS": 1,
+                                                                  "PHILIPS_HUE": 1
                                                                 }
                                                                 """
                                                 )
@@ -582,12 +582,12 @@ import static org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE;
                                                         summary = "Request is invalid",
                                                         value = """
                                                                 {
-                                                                "timestamp":"2025-09-04T13:22:11.864+00:00",
-                                                                "path":"/api/v1/statuses",
-                                                                "status":400,
-                                                                "error":"Client Error",
-                                                                "requestId":"585c9d89",
-                                                                "message":"Some params in request are not set properly!"
+                                                                  "timestamp":"2025-09-04T13:22:11.864+00:00",
+                                                                  "path":"/api/v1/statuses",
+                                                                  "status":400,
+                                                                  "error":"Client Error",
+                                                                  "requestId":"585c9d89",
+                                                                  "message":"Some params in request are not set properly!"
                                                                 }
                                                                 """
                                                 )
@@ -604,11 +604,11 @@ import static org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE;
                                                         summary = "Server is down",
                                                         value = """
                                                                 {
-                                                                "timestamp":"2025-09-04T13:19:57.120+00:00",
-                                                                "path":"/api/v1/statuses",
-                                                                "status":500,
-                                                                "error":"Internal Server Error",
-                                                                "requestId":"5f60ed6"
+                                                                  "timestamp":"2025-09-04T13:19:57.120+00:00",
+                                                                  "path":"/api/v1/statuses",
+                                                                  "status":500,
+                                                                  "error":"Internal Server Error",
+                                                                  "requestId":"5f60ed6"
                                                                 }
                                                                 """
                                                 )
@@ -616,6 +616,249 @@ import static org.springframework.http.MediaType.TEXT_EVENT_STREAM_VALUE;
                                 )
                         }
                 )
+        ),
+        @RouterOperation(path = "/api/v1/devices/{deviceId}/alertsHistory",
+                beanClass = DevicesHandler.class,
+                beanMethod = "getAlertsHistory",
+                operation = @Operation(operationId = "getAlertsHistory",
+                        summary = "Get historical data for a device alerts",
+                        parameters = {
+                                @Parameter(name = "deviceId", required = true, description = "The ID of the device", example = "5d27d69f-3254-43d7-8e5d-a68a39a45d92"),
+                                @Parameter(name = "from", required = true, description = "Start timestamp (ISO-8601)", example = "2025-08-17T13:19:00.000Z"),
+                                @Parameter(name = "to", required = true, description = "End timestamp (ISO-8601)", example = "2025-08-17T13:19:10.000Z"),
+                        },
+                        responses = {
+                                @ApiResponse(
+                                        responseCode = "200",
+                                        description = "Alerts history",
+                                        content = @Content(
+                                                mediaType = APPLICATION_JSON_VALUE,
+                                                schema = @Schema(oneOf = AlertDto.class),
+                                                examples = @ExampleObject(
+                                                        name = "Alert",
+                                                        summary = "Alerts history",
+                                                        value = """
+                                                                [ {
+                                                                  "alertId": "1c87c2a0-1325-454f-a53c-6daa07476e7d",
+                                                                  "deviceId": "bee69c5e-5b1d-45b8-8e98-34db0bfd8c3b",
+                                                                  "ruleId": "44a2de9f-9559-48a5-86f1-2a95b9881a26",
+                                                                  "severity": "WARNING",
+                                                                  "timestamp": "2025-11-07T11:11:22.311391143Z",
+                                                                  "message": "The value of humidity is less than, defined normal threshold 40.0",
+                                                                  "actualValue": 38.29
+                                                                }, {
+                                                                  "alertId": "5d27d69f-3254-43d7-8e5d-a68a39a45d92",
+                                                                  "deviceId": "bee69c5e-5b1d-45b8-8e98-34db0bfd8c3b",
+                                                                  "ruleId": "4d27d69f-4567-43d7-8e5d-a68a39a45d45",
+                                                                  "severity": "CRITICAL",
+                                                                  "timestamp": "2025-11-07T11:11:20.611391143Z",
+                                                                  "message": "The value of humidity is less than, defined normal threshold 40.0",
+                                                                  "actualValue": 29.98
+                                                                } ]
+                                                                """
+                                                )
+                                        )
+                                ),
+                                @ApiResponse(
+                                        responseCode = "400",
+                                        description = "Request is invalid",
+                                        content = @Content(
+                                                mediaType = APPLICATION_JSON_VALUE,
+                                                schema = @Schema(implementation = String.class),
+                                                examples = @ExampleObject(
+                                                        name = "Bad request",
+                                                        summary = "Request is invalid",
+                                                        value = """
+                                                                {
+                                                                  "timestamp":"2025-09-04T13:22:11.864+00:00",
+                                                                  "path":"/api/v1/devices/0752023b-57a3-4665-a842-b4da71aefcdc/alertsHistory",
+                                                                  "status":400,
+                                                                  "error":"Client Error",
+                                                                  "requestId":"585c9d89",
+                                                                  "message":"Some params in request are not set properly!"
+                                                                }
+                                                                """
+                                                )
+                                        )
+                                ),
+                                @ApiResponse(
+                                        responseCode = "500",
+                                        description = "Internal Server Error",
+                                        content = @Content(
+                                                mediaType = APPLICATION_JSON_VALUE,
+                                                schema = @Schema(implementation = String.class),
+                                                examples = @ExampleObject(
+                                                        name = "Server error",
+                                                        summary = "Server is down",
+                                                        value = """
+                                                                {
+                                                                  "timestamp":"2025-09-04T13:19:57.120+00:00",
+                                                                  "path":"/api/v1/devices/3dd253d3-901d-4f80-a240-2c8b983f0ee4/alertsHistory",
+                                                                  "status":500,
+                                                                  "error":"Internal Server Error",
+                                                                  "requestId":"5f60ed6"
+                                                                }
+                                                                """
+                                                )
+                                        )
+                                )
+                        })
+        ),
+        @RouterOperation(path = "/api/v1/devices/{deviceId}/realTimeAlerts",
+                beanClass = DevicesHandler.class,
+                beanMethod = "getRealTimeAlerts",
+                operation = @Operation(operationId = "getRealTimeAlerts",
+                        summary = "Stream real-time data for a device",
+                        parameters = {
+                                @Parameter(name = "deviceId", required = true, description = "The ID of the device", example = "5d27d69f-3254-43d7-8e5d-a68a39a45d92"),
+                                @Parameter(name = "rate", required = true, description = "Rate limit for the stream", example = "100"),
+                        },
+                        responses = {
+                                @ApiResponse(
+                                        responseCode = "200",
+                                        description = "Alerts stream",
+                                        content = @Content(
+                                                mediaType = TEXT_EVENT_STREAM_VALUE,
+                                                schema = @Schema(oneOf = AlertDto.class),
+                                                examples = @ExampleObject(
+                                                        name = "Alert",
+                                                        summary = "Alerts stream",
+                                                        value = """
+                                                                {
+                                                                  "alertId": "5d27d69f-3254-43d7-8e5d-a68a39a45d92",
+                                                                  "deviceId": "bee69c5e-5b1d-45b8-8e98-34db0bfd8c3b",
+                                                                  "ruleId": "4d27d69f-4567-43d7-8e5d-a68a39a45d45",
+                                                                  "severity": "CRITICAL",
+                                                                  "timestamp": "2025-11-07T11:11:20.611391143Z",
+                                                                  "message": "The value of humidity is less than, defined normal threshold 40.0",
+                                                                  "actualValue": 29.98
+                                                                }
+                                                                """
+                                                )
+                                        )
+                                ),
+                                @ApiResponse(
+                                        responseCode = "400",
+                                        description = "Request is invalid",
+                                        content = @Content(
+                                                mediaType = APPLICATION_JSON_VALUE,
+                                                schema = @Schema(implementation = String.class),
+                                                examples = @ExampleObject(
+                                                        name = "Bad request",
+                                                        summary = "Request is invalid",
+                                                        value = """
+                                                                {
+                                                                  "timestamp":"2025-09-04T13:22:11.864+00:00",
+                                                                  "path":"/api/v1/devices/0752023b-57a3-4665-a842-b4da71aefcdc/realTimeAlerts",
+                                                                  "status":400,
+                                                                  "error":"Client Error",
+                                                                  "requestId":"585c9d89",
+                                                                  "message":"Some params in request are not set properly!"
+                                                                }
+                                                                """
+                                                )
+                                        )
+                                ),
+                                @ApiResponse(
+                                        responseCode = "500",
+                                        description = "Internal Server Error",
+                                        content = @Content(
+                                                mediaType = APPLICATION_JSON_VALUE,
+                                                schema = @Schema(implementation = String.class),
+                                                examples = @ExampleObject(
+                                                        name = "Server error",
+                                                        summary = "Server is down",
+                                                        value = """
+                                                                {
+                                                                  "timestamp":"2025-09-04T13:19:57.120+00:00",
+                                                                  "path":"/api/v1/devices/3dd253d3-901d-4f80-a240-2c8b983f0ee4/realTimeAlerts",
+                                                                  "status":500,
+                                                                  "error":"Internal Server Error",
+                                                                  "requestId":"5f60ed6"
+                                                                }
+                                                                """
+                                                )
+                                        )
+                                )
+                        }
+                )),
+        @RouterOperation(path = "/api/v1/devices/{deviceId}/historyWithRealTimeAlerts",
+                beanClass = DevicesHandler.class,
+                beanMethod = "getHistoryWithRealTimeAlerts",
+                operation = @Operation(operationId = "getHistoryWithRealTimeAlerts",
+                        summary = "Get historical alerts data and then stream real-time data",
+                        parameters = {
+                                @Parameter(name = "deviceId", required = true, description = "The ID of the device", example = "5d27d69f-3254-43d7-8e5d-a68a39a45d92"),
+                                @Parameter(name = "from", required = true, description = "Start timestamp (ISO-8601)", example = "2025-08-17T13:19:00.000Z"),
+                        },
+                        responses = {
+                                @ApiResponse(
+                                        responseCode = "200",
+                                        description = "Alerts history and real time stream",
+                                        content = @Content(
+                                                mediaType = TEXT_EVENT_STREAM_VALUE,
+                                                schema = @Schema(oneOf = AlertDto.class),
+                                                examples = @ExampleObject(
+                                                        name = "Alerts",
+                                                        summary = "Alerts stream",
+                                                        value = """
+                                                                {
+                                                                  "alertId": "1c87c2a0-1325-454f-a53c-6daa07476e7d",
+                                                                  "deviceId": "bee69c5e-5b1d-45b8-8e98-34db0bfd8c3b",
+                                                                  "ruleId": "44a2de9f-9559-48a5-86f1-2a95b9881a26",
+                                                                  "severity": "INFO",
+                                                                  "timestamp": "2025-11-07T11:11:22.311391143Z",
+                                                                  "message": "The value of humidity is less than, defined normal threshold 40.0",
+                                                                  "actualValue": 8.299999
+                                                                }
+                                                                """
+                                                )
+                                        )
+                                ),
+                                @ApiResponse(
+                                        responseCode = "400",
+                                        description = "Request is invalid",
+                                        content = @Content(
+                                                mediaType = APPLICATION_JSON_VALUE,
+                                                schema = @Schema(implementation = String.class),
+                                                examples = @ExampleObject(
+                                                        name = "Bad request",
+                                                        summary = "Request is invalid",
+                                                        value = """
+                                                                {
+                                                                  "timestamp":"2025-09-04T13:22:11.864+00:00",
+                                                                  "path":"/api/v1/devices/0752023b-57a3-4665-a842-b4da71aefcdc/historyWithRealTime",
+                                                                  "status":400,
+                                                                  "error":"Client Error",
+                                                                  "requestId":"585c9d89",
+                                                                  "message":"Some params in request are not set properly!"
+                                                                }
+                                                                """
+                                                )
+                                        )
+                                ),
+                                @ApiResponse(
+                                        responseCode = "500",
+                                        description = "Internal Server Error",
+                                        content = @Content(
+                                                mediaType = APPLICATION_JSON_VALUE,
+                                                schema = @Schema(implementation = String.class),
+                                                examples = @ExampleObject(
+                                                        name = "Server error",
+                                                        summary = "Server is down",
+                                                        value = """
+                                                                {
+                                                                  "timestamp":"2025-09-04T13:19:57.120+00:00",
+                                                                  "path":"/api/v1/devices/3dd253d3-901d-4f80-a240-2c8b983f0ee4/historyWithRealTime",
+                                                                  "status":500,
+                                                                  "error":"Internal Server Error",
+                                                                  "requestId":"5f60ed6"
+                                                                }
+                                                                """
+                                                )
+                                        )
+                                )
+                        })
         )
 })
 public @interface RouterFunctionOpenApi {

@@ -24,7 +24,7 @@ public class TelemetriesRouterFunction {
                                 .GET("/historyWithRealTime", deviceHandler::getTelemetryHistoryWithRealTimeData)
                                 .GET("/analytics", deviceHandler::getAnalytics)
                                 .GET("/lastTelemetry", deviceHandler::getLastTelemetry)
-                                .GET("/alertHistory", deviceHandler::getAlertsHistory)
+                                .GET("/alertsHistory", deviceHandler::getAlertsHistory)
                                 .GET("/realTimeAlerts", deviceHandler::getRealTimeAlerts)
                                 .GET("/historyWithRealTimeAlerts", deviceHandler::getHistoryWithRealTimeAlerts)
                                 .GET("/lastAlert", deviceHandler::getLastAlert))
