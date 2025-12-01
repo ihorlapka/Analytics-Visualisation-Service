@@ -38,6 +38,11 @@ management:
     diskspace:
       path: /
       threshold: 1GB
+security:
+  jwt:
+    secret-key: "13a8b2d1c07c049de2422639fccbd453a0460e93c576adb3ef86209dd5a8a0eb"
+    expiration: 86400000 # day
+    refresh-token.expiration: 604800000 # week
 kafka:
   consumer:
     topic: iot-devices-data
