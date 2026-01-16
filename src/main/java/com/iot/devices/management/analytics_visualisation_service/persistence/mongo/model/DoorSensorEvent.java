@@ -1,6 +1,7 @@
 package com.iot.devices.management.analytics_visualisation_service.persistence.mongo.model;
 
 import com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceStatus;
+import com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceType;
 import com.iot.devices.management.analytics_visualisation_service.persistence.enums.DoorState;
 import lombok.*;
 import org.springframework.data.annotation.Id;
@@ -11,6 +12,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import java.time.Instant;
 import java.util.UUID;
 
+import static com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceType.DOOR_SENSOR;
 import static org.springframework.data.mongodb.core.timeseries.Granularity.MINUTES;
 
 @Data
@@ -25,8 +27,8 @@ import static org.springframework.data.mongodb.core.timeseries.Granularity.MINUT
         granularity = MINUTES
 )
 public class DoorSensorEvent implements TelemetryEvent {
-
     public static final String DOOR_SENSORS_COLLECTION = "door_sensors";
+
     @Id
     private UUID deviceId;
 
@@ -45,4 +47,9 @@ public class DoorSensorEvent implements TelemetryEvent {
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private Instant lastUpdated;
+
+    @Override
+    public  DeviceType getDeviceType() {
+        return DOOR_SENSOR;
+    }
 }

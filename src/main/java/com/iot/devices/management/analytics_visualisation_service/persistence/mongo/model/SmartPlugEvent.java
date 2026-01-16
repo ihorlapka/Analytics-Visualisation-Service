@@ -1,6 +1,7 @@
 package com.iot.devices.management.analytics_visualisation_service.persistence.mongo.model;
 
 import com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceStatus;
+import com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceType;
 import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -10,6 +11,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import java.time.Instant;
 import java.util.UUID;
 
+import static com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceType.SMART_PLUG;
 import static org.springframework.data.mongodb.core.timeseries.Granularity.MINUTES;
 
 @Data
@@ -43,4 +45,9 @@ public class SmartPlugEvent implements TelemetryEvent{
 
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private Instant lastUpdated;
+
+    @Override
+    public DeviceType getDeviceType() {
+        return SMART_PLUG;
+    }
 }

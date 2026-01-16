@@ -3,6 +3,7 @@ package com.iot.devices.management.analytics_visualisation_service.analytics;
 import com.google.common.collect.Range;
 import com.iot.devices.management.analytics_visualisation_service.analytics.model.SmartLightAnalytic;
 import com.iot.devices.management.analytics_visualisation_service.dto.SmartLightDto;
+import com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceType;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
@@ -14,12 +15,18 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.BinaryOperator;
 
+import static com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceType.SMART_LIGHT;
 import static com.iot.devices.management.analytics_visualisation_service.util.OptionalUtils.ifAllPresentGet;
 
 @Getter
 @Component
 @RequiredArgsConstructor(staticName = "of")
 public class SmartLightAnalyticProvider implements AnalyticProvider<SmartLightDto, SmartLightAnalytic> {
+
+    @Override
+    public DeviceType getDeviceType() {
+        return SMART_LIGHT;
+    }
 
     @Override
     public SmartLightAnalytic calculate(List<SmartLightDto> events) {

@@ -3,6 +3,7 @@ package com.iot.devices.management.analytics_visualisation_service.analytics;
 import com.iot.devices.management.analytics_visualisation_service.analytics.model.DoorSensorAnalytic;
 import com.iot.devices.management.analytics_visualisation_service.dto.DoorSensorDto;
 
+import com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceType;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
@@ -10,10 +11,17 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Objects;
 
+import static com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceType.DOOR_SENSOR;
+
 @Getter
 @Component
 @RequiredArgsConstructor(staticName = "of")
 public class DoorSensorAnalyticProvider implements AnalyticProvider<DoorSensorDto, DoorSensorAnalytic> {
+
+    @Override
+    public DeviceType getDeviceType() {
+        return DOOR_SENSOR;
+    }
 
     @Override
     public DoorSensorAnalytic calculate(List<DoorSensorDto> events) {

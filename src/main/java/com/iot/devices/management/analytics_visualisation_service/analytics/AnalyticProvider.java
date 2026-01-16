@@ -4,6 +4,7 @@ import com.google.common.collect.Range;
 import com.iot.devices.management.analytics_visualisation_service.analytics.model.Analytic;
 import com.iot.devices.management.analytics_visualisation_service.dto.TelemetryDto;
 import com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceStatus;
+import com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceType;
 import org.springframework.lang.Nullable;
 
 import java.math.BigDecimal;
@@ -19,6 +20,7 @@ import static java.math.RoundingMode.HALF_UP;
 
 public interface AnalyticProvider<T extends TelemetryDto, U extends Analytic> {
 
+    DeviceType getDeviceType();
     U calculate(List<T> events);
 
     default Float avg(Float param1, Float param2) {

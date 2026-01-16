@@ -3,6 +3,7 @@ package com.iot.devices.management.analytics_visualisation_service.analytics;
 import com.google.common.collect.Range;
 import com.iot.devices.management.analytics_visualisation_service.analytics.model.TemperatureSensorAnalytic;
 import com.iot.devices.management.analytics_visualisation_service.dto.TemperatureSensorDto;
+import com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceType;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Value;
@@ -14,12 +15,18 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.BinaryOperator;
 
+import static com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceType.TEMPERATURE_SENSOR;
 import static com.iot.devices.management.analytics_visualisation_service.util.OptionalUtils.ifAllPresentGet;
 
 @Getter
 @Component
 @RequiredArgsConstructor(staticName = "of")
 public class TemperatureSensorAnalyticProvider implements AnalyticProvider<TemperatureSensorDto, TemperatureSensorAnalytic> {
+
+    @Override
+    public DeviceType getDeviceType() {
+        return TEMPERATURE_SENSOR;
+    }
 
     @Override
     public TemperatureSensorAnalytic calculate(List<TemperatureSensorDto> events) {

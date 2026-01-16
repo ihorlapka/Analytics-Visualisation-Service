@@ -1,6 +1,5 @@
 package com.iot.devices.management.analytics_visualisation_service.stream;
 
-import com.iot.devices.*;
 import com.iot.devices.management.analytics_visualisation_service.dto.*;
 import com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceType;
 import com.iot.devices.management.analytics_visualisation_service.persistence.mongo.cache.TelemetryCachingRepository;
@@ -29,7 +28,7 @@ public class TelemetryStream {
     private final TelemetryCachingRepository telemetryCachingRepository;
 
     public Mono<Void> publish(SpecificRecord record) {
-        return Mono.just(sinkByClass.compute(getType(record), (k, v) -> {
+        return Mono.just(sinkByClass.compute(getType(record.getSchema().getName()), (k, v) -> {
             if (v == null) {
                 v = Sinks.many().replay().limit(HISTORY_SIZE);
             }
@@ -51,18 +50,5 @@ public class TelemetryStream {
 
     public void purge() {
         sinkByClass.clear();
-    }
-
-    private DeviceType getType(SpecificRecord record) {
-        return switch (record) {
-            case DoorSensor ignored -> DOOR_SENSOR;
-            case EnergyMeter ignored -> ENERGY_METER;
-            case SmartLight ignored -> SMART_LIGHT;
-            case SmartPlug ignored -> SMART_PLUG;
-            case SoilMoistureSensor ignored -> SOIL_MOISTURE_SENSOR;
-            case TemperatureSensor ignored -> TEMPERATURE_SENSOR;
-            case Thermostat ignored -> THERMOSTAT;
-            default -> throw new IllegalArgumentException("Unknown device type");
-        };
     }
 }

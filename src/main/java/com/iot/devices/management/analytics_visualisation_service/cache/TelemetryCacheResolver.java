@@ -24,7 +24,7 @@ public class TelemetryCacheResolver implements CacheResolver {
     public Collection<? extends Cache> resolveCaches(CacheOperationInvocationContext<?> context) {
         Object[] args = context.getArgs();
         if (args.length > 1 && args[1] instanceof DeviceType deviceType) {
-            Cache cache = cacheManager.getCache(findCacheName(deviceType));
+            Cache cache = cacheManager.getCache(deviceType.getCacheName());
             if (cache != null) {
                 return Collections.singleton(cache);
             } else {
@@ -32,17 +32,5 @@ public class TelemetryCacheResolver implements CacheResolver {
             }
         }
         throw new IllegalStateException("Failed to resolve cache with args:" + Arrays.toString(args));
-    }
-
-    private String findCacheName(DeviceType deviceType) {
-        return switch (deviceType) {
-            case DOOR_SENSOR -> DOOR_SENSOR_CACHE;
-            case ENERGY_METER -> ENERGY_METER_CACHE;
-            case SMART_LIGHT -> SMART_LIGHT_CACHE;
-            case SMART_PLUG -> SMART_PLUG_CACHE;
-            case SOIL_MOISTURE_SENSOR -> SOIL_MOISTURE_SENSOR_CACHE;
-            case TEMPERATURE_SENSOR -> TEMPERATURE_SENSOR_CACHE;
-            case THERMOSTAT -> THERMOSTAT_CACHE;
-        };
     }
 }

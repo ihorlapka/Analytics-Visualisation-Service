@@ -1,6 +1,5 @@
 package com.iot.devices.management.analytics_visualisation_service.persistence.mongo.services;
 
-import com.google.common.collect.ImmutableMap;
 import com.iot.devices.management.analytics_visualisation_service.dto.TelemetryDto;
 import com.iot.devices.management.analytics_visualisation_service.mapping.EventToDtoMapper;
 import com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceType;
@@ -13,31 +12,24 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Function;
 
-import static com.iot.devices.management.analytics_visualisation_service.persistence.enums.DeviceType.*;
+import static java.util.stream.Collectors.toUnmodifiableMap;
 
 @Service
 public class TelemetryService {
 
-    public TelemetryService(DoorSensorRepository doorSensorRepository,
-                            EnergyMeterRepository energyMeterRepository,
-                            SmartLightRepository smartLightRepository,
-                            SmartPlugRepository smartPlugRepository,
-                            SoilMoistureSensorRepository soilMoistureSensorRepository,
-                            TemperatureSensorRepository temperatureSensorRepository,
-                            ThermostatRepository thermostatRepository) {
-        this.repositoryByType = ImmutableMap.<DeviceType, TelemetryRepository<? extends TelemetryEvent>>builder()
-                .put(DOOR_SENSOR, doorSensorRepository)
-                .put(ENERGY_METER, energyMeterRepository)
-                .put(SMART_LIGHT, smartLightRepository)
-                .put(SMART_PLUG, smartPlugRepository)
-                .put(SOIL_MOISTURE_SENSOR, soilMoistureSensorRepository)
-                .put(TEMPERATURE_SENSOR, temperatureSensorRepository)
-                .put(THERMOSTAT, thermostatRepository)
-                .build();
-    }
-
     private final Map<DeviceType, TelemetryRepository<? extends TelemetryEvent>> repositoryByType;
+
+
+    public TelemetryService(List<TelemetryRepository<? extends TelemetryEvent>> repositories) {
+        this.repositoryByType = repositories.stream()
+                .peek(repo -> {
+                    if (repo.getDeviceType() == null) {
+                        throw new IllegalStateException("Repository " + repo.getClass().getName() + " must provide a DeviceType!");
+                    }
+                }).collect(toUnmodifiableMap(TelemetryRepository::getDeviceType, Function.identity()));
+    }
 
 
     public Mono<List<TelemetryDto>> findByDeviceIdAndLastUpdatedBetween(UUID deviceId, Instant from, Instant to, DeviceType deviceType) {
