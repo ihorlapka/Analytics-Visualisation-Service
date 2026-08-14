@@ -11,8 +11,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.*;
 
-import static com.iot.devices.management.analytics_visualisation_service.cache.CacheConfig.*;
-
 @Component
 @RequiredArgsConstructor
 public class TelemetryCacheResolver implements CacheResolver {
